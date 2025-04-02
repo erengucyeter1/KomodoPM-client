@@ -1,8 +1,14 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import axiosInstance from "@/utils/axios";
 import { useAuth } from "@/hooks/useAuth";
+import Card from "@/components/ui/card/Card";
+import Button from "@/components/ui/button/Button";
+import Alert from "@/components/ui/feedback/Alert";
+import Loading from "@/components/ui/feedback/Loading";
+import TextInput from "@/components/ui/form/TextInput";
 
 interface Permission {
   id: number;
@@ -11,366 +17,322 @@ interface Permission {
 }
 
 export default function PermissionsPage() {
-  const { user, loading } = useAuth(true); // Admin yetkisi gerekli
+  const { user, loading: authLoading } = useAuth();
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
-  const [openPermissionId, setOpenPermissionId] = useState<number | null>(null);
-  const [editingPermissionId, setEditingPermissionId] = useState<number | null>(null);
-  const [editedPermission, setEditedPermission] = useState<Permission | null>(null);
-  const dropdownRef = useRef<HTMLDivElement | null>(null);
-
-  // Yeni izin ekleme state'i
-  const [isAddingPermission, setIsAddingPermission] = useState(false);
-  const [newPermission, setNewPermission] = useState({
+  const [formData, setFormData] = useState({
     name: "",
-    description: ""
+    description: "",
+  });
+  const [isAddingPermission, setIsAddingPermission] = useState(false);
+  const [isEditingPermission, setIsEditingPermission] = useState(false);
+  const [editingPermission, setEditingPermission] = useState<Permission | null>(null);
+  const [formErrors, setFormErrors] = useState({
+    name: "",
   });
 
-  // API'den verileri çek
-  const fetchPermissions = () => {
-    setIsLoading(true);
-    axiosInstance.get("/authorization/permissions")
-      .then((response) => {
-        console.log("Permissions API response:", response.data);
-        setPermissions(response.data);
-        setIsLoading(false);
-      })
-      .catch((error) => {
-        console.error("Error fetching permissions:", error);
-        setError("İzinleri yüklerken bir hata oluştu. " + error.message);
-        setIsLoading(false);
-      });
-  };
-
   useEffect(() => {
-    if (!loading) {
+    if (!authLoading) {
       fetchPermissions();
-
-      // Dropdown dışına tıklanınca kapanması için
-      const handleClickOutside = (event: MouseEvent) => {
-        if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-          setOpenPermissionId(null);
-        }
-      };
-
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-      };
     }
-  }, [loading]);
+  }, [authLoading]);
 
-  const togglePermissionDropdown = (permissionId: number) => {
-    setOpenPermissionId(openPermissionId === permissionId ? null : permissionId);
+  const fetchPermissions = async () => {
+    try {
+      setIsLoading(true);
+      const response = await axiosInstance.get("/authorization/permissions");
+      setPermissions(response.data);
+    } catch (err) {
+      console.error("Error fetching permissions:", err);
+      setError("İzinler yüklenirken bir hata oluştu.");
+      
+      if (process.env.NODE_ENV === 'development') {
+        setPermissions([
+          { id: 1, name: "Kullanıcı Görüntüleme", description: "Kullanıcıları görüntüleme izni" },
+          { id: 2, name: "Kullanıcı Ekleme", description: "Yeni kullanıcı ekleme izni" },
+          { id: 3, name: "Kullanıcı Düzenleme", description: "Mevcut kullanıcıları düzenleme izni" },
+          { id: 4, name: "Kullanıcı Silme", description: "Kullanıcıları silme izni" },
+        ]);
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const startEditing = (permission: Permission) => {
-    setEditingPermissionId(permission.id);
-    setEditedPermission({ ...permission });
-    setOpenPermissionId(null);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    
+    if (name === 'name' && !value.trim()) {
+      setFormErrors(prev => ({
+        ...prev,
+        name: "İzin adı zorunludur"
+      }));
+    } else {
+      setFormErrors(prev => ({
+        ...prev,
+        name: ""
+      }));
+    }
   };
 
-  const cancelEditing = () => {
-    setEditingPermissionId(null);
-    setEditedPermission(null);
-  };
-
-  const savePermission = () => {
-    if (!editedPermission) return;
-
-    // API'ye güncelleme işlemi
-    axiosInstance.patch(`/authorization/permissions/${editedPermission.id}`, {
-      name: editedPermission.name,
-      description: editedPermission.description
-    })
-      .then(response => {
-        console.log("Permission updated successfully:", response.data);
-
-        // API yanıtını kullanarak state'i güncelle
-        const updatedPermissions = permissions.map(permission =>
-          permission.id === editedPermission.id ? response.data : permission
-        );
-
-        setPermissions(updatedPermissions);
-        setEditingPermissionId(null);
-        setEditedPermission(null);
-        setError("");
-      })
-      .catch(error => {
-        console.error("Error updating permission:", error);
-        setError(`İzin güncellenirken bir hata oluştu: ${error.response?.data?.message || error.message}`);
+  const handleAddPermission = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.name.trim()) {
+      setFormErrors({
+        name: "İzin adı zorunludur"
       });
+      return;
+    }
+    
+    try {
+      // İzin ekle
+      await axiosInstance.post("/authorization/permissions", formData);
+      
+      // Form verilerini temizle
+      setFormData({
+        name: "",
+        description: ""
+      });
+      
+      // İzin ekleme modunu kapat
+      setIsAddingPermission(false);
+      
+      // Tüm izinleri veritabanından tekrar çek
+      await fetchPermissions();
+    } catch (err) {
+      console.error("Error adding permission:", err);
+      setError("İzin eklenirken bir hata oluştu.");
+    }
   };
 
-  const handleAddPermission = () => {
-    setIsAddingPermission(true);
-    setError("");
+  const handleDeletePermission = async (id: number) => {
+    if (!confirm("Bu izni silmek istediğinizden emin misiniz?")) {
+      return;
+    }
+    
+    try {
+      await axiosInstance.delete(`/authorization/permissions/${id}`);
+      
+      setPermissions(permissions.filter(permission => permission.id !== id));
+    } catch (err) {
+      console.error("Error deleting permission:", err);
+      setError("İzin silinirken bir hata oluştu.");
+      
+      if (process.env.NODE_ENV === 'development') {
+        setPermissions(permissions.filter(permission => permission.id !== id));
+      }
+    }
   };
 
-  const cancelAddPermission = () => {
-    setIsAddingPermission(false);
-    setNewPermission({
-      name: "",
-      description: ""
+  const handleUpdatePermission = async (id: number) => {
+    const permissionToEdit = permissions.find(p => p.id === id);
+    
+    if (!permissionToEdit) {
+      setError("Düzenlenecek izin bulunamadı.");
+      return;
+    }
+    
+    setFormData({
+      name: permissionToEdit.name,
+      description: permissionToEdit.description || "",
     });
-    setError("");
+    
+    setEditingPermission(permissionToEdit);
+    setIsAddingPermission(false);
+    setIsEditingPermission(true);
   };
 
-  const saveNewPermission = () => {
-    // Validation
-    if (!newPermission.name.trim()) {
-      setError("İzin adı boş olamaz");
+  const handleUpdatePermissionSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!editingPermission) return;
+    
+    if (!formData.name.trim()) {
+      setFormErrors({
+        name: "İzin adı zorunludur"
+      });
       return;
     }
-
-    // API'ye kaydetme işlemi
-    axiosInstance.post("/authorization/permission/new", {
-      name: newPermission.name,
-      description: newPermission.description
-    })
-      .then(response => {
-        console.log("Permission added successfully:", response.data);
-
-        // API'den gelen yeni izin verisini ekle
-        setPermissions([...permissions, response.data]);
-        setIsAddingPermission(false);
-        setNewPermission({
-          name: "",
-          description: ""
-        });
-        setError("");
-      })
-      .catch(error => {
-        console.error("Error adding permission:", error);
-        setError(`İzin eklenirken bir hata oluştu: ${error.response?.data?.message || error.message}`);
+    
+    try {
+      console.log("Güncelleme için gönderilecek veri:", {
+        id: editingPermission.id,
+        ...formData
       });
-  };
-
-  const deletePermission = (permissionId: number) => {
-    if (!window.confirm("Bu izni silmek istediğinize emin misiniz?")) {
-      return;
+      
+      const updatedPermissions = permissions.map(permission => 
+        permission.id === editingPermission.id 
+          ? { ...permission, ...formData } 
+          : permission
+      );
+      
+      setPermissions(updatedPermissions);
+      
+      setFormData({
+        name: "",
+        description: ""
+      });
+      
+      setIsEditingPermission(false);
+      setEditingPermission(null);
+    } catch (err) {
+      console.error("Error updating permission:", err);
+      setError("İzin güncellenirken bir hata oluştu.");
     }
-
-    // API'den silme işlemi
-    axiosInstance.delete(`/authorization/permissions/${permissionId}`)
-      .then(response => {
-        console.log("Permission deleted successfully:", response.data);
-
-        // Silinen izni state'den çıkar
-        const updatedPermissions = permissions.filter(
-          permission => permission.id !== permissionId
-        );
-
-        setPermissions(updatedPermissions);
-        setOpenPermissionId(null);
-        setError("");
-      })
-      .catch(error => {
-        console.error("Error deleting permission:", error);
-        setError(`İzin silinirken bir hata oluştu: ${error.response?.data?.message || error.message}`);
-      });
   };
 
-  if (loading || isLoading) {
-    return (
-      <div className="bg-white rounded-lg shadow-md p-6 text-center py-10">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#063554]"></div>
-        <p className="mt-3 text-gray-500">Yükleniyor...</p>
-      </div>
-    );
+  if (authLoading || isLoading) {
+    return <Loading text="İzinler yükleniyor..." />;
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-[#063554]">Kullanıcı İzinleri</h1>
-        <button
-          onClick={handleAddPermission}
-          className="bg-[#da8e0a] hover:bg-[#c07c09] text-white py-2 px-4 rounded flex items-center transition-colors"
-        >
-          <span className="mr-2">+</span> Yeni İzin Ekle
-        </button>
-      </div>
-
-      {error && (
-        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded flex justify-between items-center">
-          <span>{error}</span>
-          <button
-            onClick={() => setError("")}
-            className="text-red-700 hover:text-red-900 font-bold"
-            title="Kapat"
-          >
-            &times;
-          </button>
+    <Card 
+      title="İzin Yönetimi" 
+      actions={
+        !isAddingPermission && !isEditingPermission && (
+          <Button 
+          userPermissions={user?.permissions}
+          permissionsRequired={[15]}
+          onClick={() => setIsAddingPermission(true)}>
+            Yeni İzin Ekle
+          </Button>
+        )
+      }
+    >
+      {error && <Alert type="error" message={error} className="mb-4" />}
+      
+      {/* İzin Ekleme/Düzenleme Formu */}
+      {(isAddingPermission || isEditingPermission) && (
+        <div className="mb-6 bg-gray-50 p-4 rounded-lg">
+          <h3 className="text-lg font-semibold mb-4">
+            {isEditingPermission ? "İzin Düzenle" : "Yeni İzin Ekle"}
+          </h3>
+          
+          <form onSubmit={isEditingPermission ? handleUpdatePermissionSubmit : handleAddPermission}>
+            <div className="space-y-4">
+              <TextInput
+                id="name"
+                name="name"
+                label="İzin Adı"
+                value={formData.name}
+                onChange={handleChange}
+                error={formErrors.name}
+                required
+              />
+              
+              <div className="mb-4">
+                <label 
+                  htmlFor="description" 
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Açıklama
+                </label>
+                <textarea
+                  id="description"
+                  name="description"
+                  rows={3}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#da8e0a] focus:border-transparent"
+                  value={formData.description}
+                  onChange={handleChange}
+                />
+              </div>
+              
+              <div className="flex gap-2 justify-end">
+                <Button 
+                  type="button" 
+                  variant="secondary"
+                  onClick={() => {
+                    setIsAddingPermission(false);
+                    setIsEditingPermission(false);
+                    setEditingPermission(null);
+                    setFormData({ name: "", description: "" });
+                  }}
+                >
+                  İptal
+                </Button>
+                <Button type="submit">
+                  {isEditingPermission ? "Güncelle" : "Kaydet"}
+                </Button>
+              </div>
+            </div>
+          </form>
         </div>
       )}
-
-      {/* Yeni İzin Ekleme Formu */}
-      {isAddingPermission && (
-        <div className="mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
-          <h2 className="text-lg font-semibold mb-3">Yeni İzin Ekle</h2>
-          <div className="space-y-3">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                İzin Adı <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={newPermission.name}
-                onChange={(e) => setNewPermission({ ...newPermission, name: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#da8e0a] focus:border-transparent"
-                placeholder="İzin adını girin"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+      
+      <div className="bg-white shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                 ID
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                İzin Adı
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Açıklama
-              </label>
-              <textarea
-                value={newPermission.description}
-                onChange={(e) => setNewPermission({ ...newPermission, description: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#da8e0a] focus:border-transparent"
-                placeholder="İzin açıklamasını girin"
-                rows={2}
-              />
-            </div>
-            <div className="flex justify-end space-x-2">
-              <button
-                onClick={cancelAddPermission}
-                className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50"
-              >
-                İptal
-              </button>
-              <button
-                onClick={saveNewPermission}
-                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-white bg-[#da8e0a] hover:bg-[#c07c09]"
-              >
-                Kaydet
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {permissions.length === 0 ? (
-        <div className="text-center py-10 text-gray-500">
-          <p>Henüz izin bulunmamaktadır.</p>
-          <button
-            onClick={handleAddPermission}
-            className="inline-block mt-3 text-[#447494] hover:underline"
-          >
-            İlk izni ekleyin
-          </button>
-        </div>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full bg-white">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="py-3 px-4 text-left">ID</th>
-                <th className="py-3 px-4 text-left">İzin Adı</th>
-                <th className="py-3 px-4 text-left">Açıklama</th>
-                <th className="py-3 px-4 text-center">İşlemler</th>
-              </tr>
-            </thead>
-            <tbody>
-              {permissions.map((permission) => (
-                <tr key={`permission-${permission.id}`} className="border-t hover:bg-gray-50">
-                  <td className="py-3 px-4">{permission.id}</td>
-                  <td className="py-3 px-4">
-                    {editingPermissionId === permission.id && editedPermission ? (
-                      <input
-                        type="text"
-                        value={editedPermission.name}
-                        onChange={(e) => setEditedPermission({ ...editedPermission, name: e.target.value })}
-                        className="px-2 py-1 border rounded w-full"
-                      />
-                    ) : (
-                      permission.name
-                    )}
-                  </td>
-                  <td className="py-3 px-4">
-                    {editingPermissionId === permission.id && editedPermission ? (
-                      <textarea
-                        value={editedPermission.description}
-                        onChange={(e) => setEditedPermission({ ...editedPermission, description: e.target.value })}
-                        className="px-2 py-1 border rounded w-full"
-                        rows={2}
-                      />
-                    ) : (
-                      permission.description
-                    )}
-                  </td>
-                  <td className="py-3 px-4 text-center relative">
-                    {editingPermissionId === permission.id ? (
-                      <div className="flex justify-center space-x-2">
-                        <button
-                          onClick={savePermission}
-                          className="text-green-500 hover:text-green-700"
-                          title="Kaydet"
-                        >
-                          ✓
-                        </button>
-                        <button
-                          onClick={cancelEditing}
-                          className="text-red-500 hover:text-red-700"
-                          title="İptal"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="relative" ref={openPermissionId === permission.id ? dropdownRef : null}>
-                        <button
-                          className="text-gray-500 hover:text-gray-700"
-                          onClick={() => togglePermissionDropdown(permission.id)}
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-6 w-6"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="2"
-                              d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
-                            />
-                          </svg>
-                        </button>
-
-                        {openPermissionId === permission.id && (
-                          <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10">
-                            <div className="py-1">
-                              <button
-                                key={`edit-${permission.id}`}
-                                className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
-                                onClick={() => startEditing(permission)}
-                              >
-                                Düzenle
-                              </button>
-                              <button
-                                key={`delete-${permission.id}`}
-                                className="block w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100"
-                                onClick={() => deletePermission(permission.id)}
-                              >
-                                Sil
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
+              </th>
+              <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                İşlemler
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+              {permissions.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="px-6 py-4 text-center text-gray-500">
+                    Henüz izin bulunmamaktadır.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                permissions.map((permission) => (
+                  <tr key={permission.id}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">{permission.id}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">{permission.name}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-500">{permission.description || "-"}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <div className="flex justify-end space-x-2">
+                        <Button
+                          variant="secondary"
+                          size="xs"
+                          className="px-2 py-1 text-xs"
+                          userPermissions={user?.permissions}
+                          permissionsRequired={[17]}
+                          onClick={() => handleUpdatePermission(permission.id)}
+                        >
+                          Düzenle
+                        </Button>
+                        <Button
+                          variant="danger"
+                          size="xs"
+                          className="px-2 py-1 text-xs"
+                          userPermissions={user?.permissions}
+                          permissionsRequired={[16]}
+                          onClick={() => handleDeletePermission(permission.id)}
+                        >
+                          Sil
+                        </Button>
+                       
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
-          </table>
-        </div>
-      )}
-    </div>
+        </table>
+      </div>
+    </Card>
   );
 }

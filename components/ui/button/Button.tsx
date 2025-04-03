@@ -11,6 +11,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement>, Per
   isLoading?: boolean;
   startIcon?: React.ReactNode;
   endIcon?: React.ReactNode;
+  requirementType?: "every" | "some"; // Yeni eklenen prop
 }
 
 const getVariantClasses = (variant: ButtonVariant): string => {

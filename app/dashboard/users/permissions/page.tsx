@@ -198,7 +198,7 @@ export default function PermissionsPage() {
         !isAddingPermission && !isEditingPermission && (
           <Button 
           userPermissions={user?.permissions}
-          permissionsRequired={[15]}
+          permissionsRequired={['add:permission']}
           onClick={() => setIsAddingPermission(true)}>
             Yeni İzin Ekle
           </Button>
@@ -309,7 +309,7 @@ export default function PermissionsPage() {
                           size="xs"
                           className="px-2 py-1 text-xs"
                           userPermissions={user?.permissions}
-                          permissionsRequired={[17]}
+                          permissionsRequired={['update:permissions']}
                           onClick={() => handleUpdatePermission(permission.id)}
                         >
                           Düzenle
@@ -319,7 +319,7 @@ export default function PermissionsPage() {
                           size="xs"
                           className="px-2 py-1 text-xs"
                           userPermissions={user?.permissions}
-                          permissionsRequired={[16]}
+                          permissionsRequired={['delete:permission']}
                           onClick={() => handleDeletePermission(permission.id)}
                         >
                           Sil

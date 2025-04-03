@@ -108,12 +108,12 @@ export default function UserDetailPage() {
   return (
     <Card
       userPermissions={user?.permissions}
-      permissionsRequired={[26]} 
+      permissionsRequired={['see:user_details']} 
       title="Kullanıcı Detayları" 
       actions={
         <div className="flex space-x-2">
           <Button
-              permissionsRequired = {[11]}
+              permissionsRequired = {['update:user']}
               userPermissions = {user?.permissions}
             variant="secondary"
             onClick={() => setIsEditMode(true)}
@@ -121,7 +121,7 @@ export default function UserDetailPage() {
             Düzenle
           </Button>
           <Button
-          permissionsRequired = {[10]}
+          permissionsRequired = {['delete:user']}
           userPermissions = {user?.permissions}
             variant="danger"
             onClick={handleDelete}

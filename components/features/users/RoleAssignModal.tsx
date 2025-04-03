@@ -35,6 +35,7 @@ export default function RoleAssignModal({
   onClose,
   user,
   onRoleAssigned,
+  
 }: RoleAssignModalProps) {
   const [roles, setRoles] = useState<Role[]>([]);
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
@@ -240,6 +241,7 @@ export default function RoleAssignModal({
           
           <div className="pt-4 border-t flex justify-end space-x-2">
             <Button 
+              
               variant="secondary"
               onClick={onClose}
               disabled={isSaving}
@@ -247,6 +249,8 @@ export default function RoleAssignModal({
               İptal
             </Button>
             <Button
+              permissionsRequired ={['update:user_roles']}
+              userPermissions = {user?.permissions}
               onClick={handleSave}
               isLoading={isSaving}
             >

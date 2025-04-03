@@ -16,7 +16,6 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const loadUser = () => {
       const token = localStorage.getItem('token');
-      const userInfo = localStorage.getItem('user');
 
       if (!token) {
         setUser(null);
@@ -24,14 +23,13 @@ export function AuthProvider({ children }) {
         return;
       }
 
-      if (userInfo) {
+      if (token) {
         try {
-          const userData = JSON.parse(userInfo);
-          setUser(userData);
+          const parsedToken = parseJwt(token);
+          setUser(parsedToken.user);
         } catch (error) {
           console.error('Error parsing user info:', error);
           localStorage.removeItem('token');
-          localStorage.removeItem('user');
         }
       }
       
@@ -41,15 +39,45 @@ export function AuthProvider({ children }) {
     loadUser();
   }, []);
 
+  function parseJwt(token) {
+    try {
+      // JWT'nin payload kısmını al
+      const base64Url = token.split('.')[1];
+      
+      // Base64 URL karakter düzeltmeleri
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      
+      // Base64'ü çözümle (UTF-8 desteği ile)
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
+      
+      return JSON.parse(jsonPayload);
+    } catch (error) {
+      console.error('JWT parsing error:', error);
+      return null;
+    }
+  }
+  
   // Login function
   const login = async (username, password) => {
     try {
+      
       const response = await axiosInstance.post('/auth/login', { username, password });
+
+      console.log('status:', response.status);
+      console.log('Login response:', response);
+
       
       if (response.data && response.data.accessToken) {
-        localStorage.setItem('token', response.data.accessToken);
-        localStorage.setItem('user', JSON.stringify(response.data.userInfo));
-        setUser(response.data.userInfo);
+        const token = response.data.accessToken;
+        localStorage.setItem('token', token);
+
+        const parsedToken =  parseJwt(token);
+        setUser(parsedToken.user);
         return true;
       }
       return false;
@@ -62,7 +90,6 @@ export function AuthProvider({ children }) {
   // Logout function
   const logout = () => {
     localStorage.removeItem('token');
-    localStorage.removeItem('user');
     setUser(null);
     router.push('/auth/login');
   };
@@ -77,7 +104,7 @@ export function AuthProvider({ children }) {
 
   // Check if user is admin
   const isAdmin = () => {
-    return hasPermission(0) || (user && user.authorization_rank >= 10);
+    return hasPermission(4);
   };
 
   return (
@@ -87,7 +114,6 @@ export function AuthProvider({ children }) {
       login, 
       logout, 
       hasPermission, 
-      isAdmin 
     }}>
       {children}
     </AuthContext.Provider>

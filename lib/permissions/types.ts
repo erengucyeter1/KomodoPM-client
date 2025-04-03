@@ -1,4 +1,4 @@
 export interface PermissionProps {
-  permissionsRequired?: number[];
-  userPermissions?: number[];
+  permissionsRequired?: string[];
+  userPermissions?: string[];
 }

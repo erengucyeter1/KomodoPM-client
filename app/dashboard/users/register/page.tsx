@@ -6,7 +6,7 @@ import UserForm from "@/components/features/users/UserForm";
 import Loading from "@/components/ui/feedback/Loading";
 
 export default function RegisterUserPage() {
-  const { loading } = useAuth();
+  const { user,loading } = useAuth();
 
   if (loading) {
     return <Loading />;
@@ -14,6 +14,8 @@ export default function RegisterUserPage() {
 
   return (
     <Card 
+      userPermissions={user?.permissions}
+      permissionsRequired={['add:user']}
       title="Yeni Kullanıcı Tanımla" 
       subtitle="Komodo Proje Yönetim Sistemine yeni kullanıcı ekleyin"
     >

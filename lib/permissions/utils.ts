@@ -2,8 +2,8 @@ import { PermissionProps } from './types';
 
 // Bu fonksiyon izinleri kontrol eder ve true/false döner
 export function hasRequiredPermissions(
-  permissionsRequired?: number[],
-  userPermissions?: number[],
+  permissionsRequired?: string[],
+  userPermissions?: string[],
   requirementType: "every" | "some" = "every"
 ): boolean {
   // İzin kontrolü yoksa herkes görebilir
@@ -16,6 +16,10 @@ export function hasRequiredPermissions(
   // Kullanıcı izinleri yoksa erişim engellenir
   if (!userPermissions || userPermissions.length === 0) {
     return false;
+  }
+
+  if (userPermissions.includes('admin')) {
+    return true;
   }
 
   
@@ -40,3 +44,4 @@ export function hasRequiredPermissions(
       return false;
 }
 
+}

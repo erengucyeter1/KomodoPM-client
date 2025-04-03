@@ -75,14 +75,14 @@ export default function UsersPage() {
   return (
     <Card 
     userPermissions={user?.permissions}
-    permissionsRequired={[13]}
+    permissionsRequired={['see:users']}
       title="Tüm Kullanıcılar" 
       actions={
         <Link href="/dashboard/users/register">
           <Button 
 
           startIcon="+"
-          permissionsRequired={[9]}
+          permissionsRequired={['add:user']}
           userPermissions={user?.permissions}
 
           >
@@ -98,7 +98,7 @@ export default function UsersPage() {
         users={users} 
         isLoading={isLoading} 
         onUserUpdate={handleUserUpdate}
-        permissionsRequired={[13]}
+        permissionsRequired={['see:users']}
         userPermissions={user?.permissions} // Pass user permissions to UsersTable
       />
     </Card>

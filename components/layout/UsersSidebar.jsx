@@ -19,7 +19,7 @@ export default function UsersSidebar() {
     { id: "all-users", label: "Tüm Kullanıcılar", icon: "👥", path: "/dashboard/users"},
     //{ id: "add-user", label: "Yeni Kullanıcı", icon: "➕", path: "/dashboard/users/register" },
     { id: "roles", label: "Kullanıcı Rolleri", icon: "🏷️", path: "/dashboard/users/roles" },
-    { id: "permissions", label: "Kullanıcı İzinleri", icon: "🔑", path: "/dashboard/users/permissions",permissions: [14] },
+    { id: "permissions", label: "Kullanıcı İzinleri", icon: "🔑", path: "/dashboard/users/permissions",permissions: ['see:permissions'] },
   ];
 
   useEffect(() => {

@@ -287,7 +287,7 @@ export default function RolesPage() {
         <Button 
           onClick={handleAddRole}
           startIcon="+"
-          permissionsRequired= {[18]}
+          permissionsRequired= {['add:role']}
           userPermissions = {user?.permissions}
         >
           Yeni Rol Ekle
@@ -539,7 +539,7 @@ export default function RolesPage() {
                           onClick={() => toggleRoleDropdown(role.id)}
                           variant="ghost"
 
-                          permissionsRequired={[20,21]}
+                          permissionsRequired={['delete:role','update:role']}
                           userPermissions={user?.permissions}
                           requirementType = "some"
                         >
@@ -564,7 +564,7 @@ export default function RolesPage() {
                           <div className="py-1 flex flex-col items-center justify-center gap-2 p-2">
                             <Button
                               key={`edit-btn-${role.id}`}
-                              permissionsRequired={[21]}
+                              permissionsRequired={['update:role']}
                               userPermissions={user?.permissions}
                               variant="ghost"
                               onClick={() => startEditing(role)}
@@ -574,7 +574,7 @@ export default function RolesPage() {
                             </Button>
                             <Button
                               key={`delete-btn-${role.id}`}
-                              permissionsRequired={[20]}
+                              permissionsRequired={['delete:role']}
                               userPermissions={user?.permissions}
                               variant="danger"
                               onClick={() => deleteRole(role.id)}

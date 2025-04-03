@@ -56,7 +56,7 @@ export default function UsersTable({ users, isLoading, onUserUpdate ,  permissio
     {
       title: "Ad Soyad",
       key: "fullName",
-      render: (tempUser: User) => `${user.name} ${user.surname}`,
+      render: (tempUser: User) => `${tempUser.name} ${tempUser.surname}`, // Use row data
     },
     { title: "E-posta", key: "email" },
     { 
@@ -73,7 +73,7 @@ export default function UsersTable({ users, isLoading, onUserUpdate ,  permissio
       render: (tempUser: User) => (
         <div className="flex space-x-2 justify-center">
           <Button
-              permissionsRequired ={[26]}
+              permissionsRequired ={['see:user_details']}
               userPermissions = {user?.permissions}
             variant="secondary"
             size="sm"
@@ -82,7 +82,7 @@ export default function UsersTable({ users, isLoading, onUserUpdate ,  permissio
             Detaylar
           </Button>
           <Button
-          permissionsRequired ={[27]}
+          permissionsRequired ={['see:user_roles']}
           userPermissions = {user?.permissions}
             variant="primary"
             size="sm"

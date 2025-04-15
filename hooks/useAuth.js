@@ -120,6 +120,11 @@ export function AuthProvider({ children }) {
   );
 }
 
+export function getToken(){
+  const token = localStorage.getItem('token');
+  return token ? token : null;
+}
+
 // Hook to use auth context
 export function useAuth(adminRequired = false) {
   const context = useContext(AuthContext);

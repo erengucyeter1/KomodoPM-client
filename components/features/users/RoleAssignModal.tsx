@@ -4,6 +4,7 @@ import Modal from "@/components/ui/modal/Modal";
 import Button from "@/components/ui/button/Button";
 import Alert from "@/components/ui/feedback/Alert";
 import Loading from "@/components/ui/feedback/Loading";
+import { useAuth } from "@/hooks/useAuth"; // useAuth hook'unu ekleyin
 
 interface User {
   id: number;
@@ -33,17 +34,19 @@ interface RoleAssignModalProps {
 export default function RoleAssignModal({
   isOpen,
   onClose,
-  user,
+  user, // Bu, düzenlenen kullanıcı (hedef kullanıcı)
   onRoleAssigned,
-  
 }: RoleAssignModalProps) {
+  // Oturum açmış olan mevcut kullanıcıyı al
+  const { user: currentUser } = useAuth();
+  
   const [roles, setRoles] = useState<Role[]>([]);
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
 
-  // Kullanıcının sahip olduğu roller
+  // Düzenlenen kullanıcının sahip olduğu roller
   const [userRoles, setUserRoles] = useState<string[]>([]);
 
   useEffect(() => {
@@ -51,6 +54,9 @@ export default function RoleAssignModal({
       fetchRoles();
       fetchUserRoles();
     }
+
+    console.log("user permissions", user?.permissions);
+
   }, [isOpen, user.id]);
 
   const fetchRoles = async () => {
@@ -241,7 +247,6 @@ export default function RoleAssignModal({
           
           <div className="pt-4 border-t flex justify-end space-x-2">
             <Button 
-              
               variant="secondary"
               onClick={onClose}
               disabled={isSaving}
@@ -249,8 +254,8 @@ export default function RoleAssignModal({
               İptal
             </Button>
             <Button
-              permissionsRequired ={['update:user_roles']}
-              userPermissions = {user?.permissions}
+              permissionsRequired={['update:user_roles']}
+              userPermissions={currentUser?.permissions} // Oturum açmış kullanıcının izinlerini kullan
               onClick={handleSave}
               isLoading={isSaving}
             >

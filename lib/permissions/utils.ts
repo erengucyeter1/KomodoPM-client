@@ -13,6 +13,7 @@ export function hasRequiredPermissions(
   if (!userPermissions || userPermissions.length === 0) {
     return false;
   }
+
   if (userPermissions.includes('admin')) {
     return true;
   }

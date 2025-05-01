@@ -121,8 +121,11 @@ export function AuthProvider({ children }) {
 }
 
 export function getToken(){
-  const token = localStorage.getItem('token');
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('token');
   return token ? token : null;
+  } 
+  return null;  
 }
 
 // Hook to use auth context

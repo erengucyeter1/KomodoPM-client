@@ -78,7 +78,7 @@ export default function UsersPage() {
     permissionsRequired={['see:users']}
       title="Tüm Kullanıcılar" 
       actions={
-        <Link href="/dashboard/users/register">
+        <Link href="/users/register">
           <Button 
 
           startIcon="+"

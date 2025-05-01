@@ -66,7 +66,7 @@ export default function UserDetailPage() {
 
     try {
       await axiosInstance.delete(`/users/${id}`);
-      router.push("/dashboard/users");
+      router.push("/users");
     } catch (err) {
       console.error("Error deleting user:", err);
       setError("Kullanıcı silinirken bir hata oluştu.");
@@ -82,7 +82,7 @@ export default function UserDetailPage() {
       <Card>
         <Alert type="error" message={error} />
         <div className="mt-4">
-          <Button variant="secondary" onClick={() => router.push("/dashboard/users")}>
+          <Button variant="secondary" onClick={() => router.push("/users")}>
             Kullanıcılar Sayfasına Dön
           </Button>
         </div>
@@ -175,7 +175,7 @@ export default function UserDetailPage() {
           <div className="flex justify-end">
             <Button
               variant="secondary"
-              onClick={() => router.push("/dashboard/users")}
+              onClick={() => router.push("/users")}
             >
               Kullanıcılar Listesine Dön
             </Button>

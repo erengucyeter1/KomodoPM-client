@@ -16,10 +16,10 @@ export default function UsersSidebar() {
 
   // Menu items
   const menuItems = [
-    { id: "all-users", label: "Tüm Kullanıcılar", icon: "👥", path: "/dashboard/users"},
-    //{ id: "add-user", label: "Yeni Kullanıcı", icon: "➕", path: "/dashboard/users/register" },
-    { id: "roles", label: "Kullanıcı Rolleri", icon: "🏷️", path: "/dashboard/users/roles" },
-    { id: "permissions", label: "Kullanıcı İzinleri", icon: "🔑", path: "/dashboard/users/permissions",permissions: ['see:permissions'] },
+    { id: "all-users", label: "Tüm Kullanıcılar", icon: "👥", path: "/users"},
+    //{ id: "add-user", label: "Yeni Kullanıcı", icon: "➕", path: "/users/register" },
+    { id: "roles", label: "Kullanıcı Rolleri", icon: "🏷️", path: "/users/roles" },
+    { id: "permissions", label: "Kullanıcı İzinleri", icon: "🔑", path: "/users/permissions",permissions: ['see:permissions'] },
   ];
 
   useEffect(() => {

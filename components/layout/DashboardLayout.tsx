@@ -9,7 +9,8 @@ interface MenuItem {
   title: string;
   path: string;
   icon: React.ReactNode;
-  requiredPermission?: number; // Optional permission required to see this menu item
+  requiredPermission?: number;
+  permissions: string[];
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -17,11 +18,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const pathname = usePathname();
   
-  // Determine if the sidebar should be shown at all
-  // Only show on exactly /dashboard path
-  const showSidebar = pathname === "/dashboard";
+  // Navbar her zaman gösterilsin, sidebar sadece belirli sayfalarda gösterilsin
 
-  // Menu items with icons
+  if (pathname.startsWith("/auth")) {
+    return <>{children}</>; // Login ve Register sayfalarında sadece children render ediliyor
+  }
+  const showNavbar = true; // Her zaman göster
+  const showSidebar = true; // Tüm sayfalarda göstermek istiyoruz
+
   const menuItems: MenuItem[] = [
     {
       title: "Dashboard",
@@ -35,7 +39,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     },
     {
       title: "Kullanıcılar",
-      path: "/dashboard/users",
+      path: "/users",
       icon: (
         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
@@ -45,18 +49,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     },
     {
       title: "Projeler",
-      path: "/dashboard/projects",
+      path: "/projects",
       icon: (
         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
         </svg>
       ),
       permissions: ['see:projects']
-
     },
     {
       title: "Mesajlar",
-      path: "/dashboard/chat",
+      path: "/chat",
       icon: (
         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -64,58 +67,69 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       ),
       permissions: []
     },
-    
+    {
+      title: "Stok",
+      path: "/stock",
+      icon: (
+        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+        </svg>
+      ),
+      permissions: ['see:stock']
+    },
   ];
 
   return (
     <div className="min-h-screen bg-gray-100">
-      {/* Top navbar */}
-      <nav className="bg-[#063554] shadow-md">
-        <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex">
-              <div className="flex-shrink-0 flex items-center">
-                {showSidebar && (
-                  <button
-                    onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                    className="text-white focus:outline-none mr-4"
-                  >
-                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-                    </svg>
-                  </button>
-                )}
-                <PermissionLink href="/dashboard" className="text-white text-xl font-bold">
-                  Komodo PM
-                </PermissionLink>
-              </div>
-            </div>
-            <div className="flex items-center">
-              <div className="flex items-center">
-                <div className="ml-3 relative">
-                  <div className="flex items-center">
-                    <div className="text-white mr-4">
-                      <div className="text-sm font-medium">
-                        {user?.name} {user?.surname}
-                      </div>
-                      <div className="text-xs opacity-75">{user?.email}</div>
-                    </div>
+      {/* Üst Navbar - Her zaman göster */}
+      {showNavbar && (
+        <nav className="bg-[#063554] shadow-md">
+          <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between h-16">
+              <div className="flex">
+                <div className="flex-shrink-0 flex items-center">
+                  {showSidebar && (
                     <button
-                      onClick={logout}
-                      className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md text-sm"
+                      onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                      className="text-white focus:outline-none mr-4"
                     >
-                      Çıkış
+                      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+                      </svg>
                     </button>
+                  )}
+                  <PermissionLink href="/dashboard" className="text-white text-xl font-bold">
+                    Komodo PM
+                  </PermissionLink>
+                </div>
+              </div>
+              <div className="flex items-center">
+                <div className="flex items-center">
+                  <div className="ml-3 relative">
+                    <div className="flex items-center">
+                      <div className="text-white mr-4">
+                        <div className="text-sm font-medium">
+                          {user?.name} {user?.surname}
+                        </div>
+                        <div className="text-xs opacity-75">{user?.email}</div>
+                      </div>
+                      <button
+                        onClick={logout}
+                        className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md text-sm"
+                      >
+                        Çıkış
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </nav>
+        </nav>
+      )}
 
       <div className="flex">
-        {/* Sidebar - only show if on main dashboard page */}
+        {/* Sidebar */}
         {showSidebar && (
           <aside
             className={`${
@@ -157,7 +171,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </aside>
         )}
 
-        {/* Main content - adjust margin based on sidebar visibility */}
+        {/* Main content */}
         <main
           className={`flex-1 ${
             showSidebar && isSidebarOpen ? "ml-64" : showSidebar ? "ml-20" : "ml-0"

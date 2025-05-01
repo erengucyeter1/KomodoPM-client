@@ -150,7 +150,7 @@ export default function ProjectsPage() {
       <Card 
         title="Projeler" 
         actions={
-          <Link href="/dashboard/projects/create">
+          <Link href="/projects/create">
             <Button startIcon="+">
               Yeni Proje
             </Button>
@@ -170,7 +170,7 @@ export default function ProjectsPage() {
               key={project.id}
               ref={isLastItem ? lastProjectRef : null}
               className="cursor-pointer h-full"
-              onClick={() => window.location.href = `/dashboard/projects/${project.id}`}
+              onClick={() => window.location.href = `/projects/${project.id}`}
             >
               <Card className="hover:shadow-md transition-shadow duration-200 h-full flex flex-col">
                 {/* Image Section - Top of Card */}

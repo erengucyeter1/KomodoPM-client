@@ -138,7 +138,7 @@ export default function ProjectDetailPage() {
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-4">
           <Button 
-            variant="outlined" 
+            variant="secondary"
             onClick={() => router.back()}
             startIcon={
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -152,7 +152,7 @@ export default function ProjectDetailPage() {
         </div>
         
         <div className="flex gap-3">
-          <Link href={`/dashboard/projects/${projectId}/newExpense`}>
+          <Link href={`/projects/${projectId}/newExpense`}>
             <Button>
               <span className="flex items-center gap-2">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -300,7 +300,7 @@ export default function ProjectDetailPage() {
       <Card>
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold">Proje Giderleri</h2>
-          <Link href={`/dashboard/projects/${projectId}/newExpense`}>
+          <Link href={`/projects/${projectId}/newExpense`}>
             <Button startIcon={<span>+</span>}>
               Yeni Gider Ekle
             </Button>

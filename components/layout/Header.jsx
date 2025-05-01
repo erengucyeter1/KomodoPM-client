@@ -68,7 +68,7 @@ export default function Header() {
                 </Link>
                 <div className="border-t border-gray-200 my-1"></div>
                 <Link
-                  href="/dashboard/users"
+                  href="/users"
                   className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
                 >
                   Kullanıcılar

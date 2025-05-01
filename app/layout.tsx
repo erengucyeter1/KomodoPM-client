@@ -1,16 +1,23 @@
 import "./globals.css";
 import { AuthProvider } from "@/hooks/useAuth";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+
+
+export const metadata = {
+  title: "Komodo Project Management",
+  description: "Komodo Project Management System",
+};
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html lang="en">
+    <html lang="tr">
       <body>
         <AuthProvider>
-          {children}
+          <DashboardLayout>{children}</DashboardLayout>
         </AuthProvider>
       </body>
     </html>

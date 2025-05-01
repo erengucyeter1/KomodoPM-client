@@ -124,7 +124,7 @@ export default function CreateProjectPage() {
       
       // Redirect to projects page after short delay
       setTimeout(() => {
-        router.push("/dashboard/projects?refresh=" + Date.now());
+        router.push("/projects?refresh=" + Date.now());
       }, 1500);
       
     } catch (err: any) {
@@ -308,7 +308,7 @@ export default function CreateProjectPage() {
             <Button
               type="button"
               variant="outlined"
-              onClick={() => router.push("/dashboard/projects")}
+              onClick={() => router.push("/projects")}
               disabled={isSubmitting}
             >
               İptal

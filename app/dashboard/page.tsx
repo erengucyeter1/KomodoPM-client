@@ -108,17 +108,17 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card title="Hızlı Erişim">
           <div className="space-y-2">
-            <Link href="/dashboard/users">
+            <Link href="/users">
               <Button variant="secondary" className="w-full mb-2">
                 Kullanıcıları Yönet
               </Button>
             </Link>
-            <Link href="/dashboard/projects">
+            <Link href="/projects">
               <Button variant="secondary" className="w-full mb-2">
                 Projeleri Görüntüle
               </Button>
             </Link>
-            <Link href="/dashboard/users/register">
+            <Link href="/users/register">
               <Button variant="primary" className="w-full">
                 Yeni Kullanıcı Ekle
               </Button>

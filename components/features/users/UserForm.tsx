@@ -88,7 +88,7 @@ export default function UserForm({
       if (onSuccess) {
         onSuccess();
       } else {
-        router.push("/dashboard/users");
+        router.push("/users");
       }
     } catch (err) {
       setLoading(false);
@@ -155,7 +155,7 @@ export default function UserForm({
 
           type="button"
           variant="secondary"
-          onClick={() => router.push("/dashboard/users")}
+          onClick={() => router.push("/users")}
         >
           İptal
         </Button>

@@ -77,7 +77,7 @@ export default function UsersTable({ users, isLoading, onUserUpdate ,  permissio
               userPermissions = {user?.permissions}
             variant="secondary"
             size="sm"
-            onClick={() => router.push(`/dashboard/users/${tempUser.id}`)}
+            onClick={() => router.push(`/users/${tempUser.id}`)}
           >
             Detaylar
           </Button>

@@ -8,6 +8,8 @@ import { useParams } from "next/navigation";
 
 export default function NewExpensePage() {
   const [stockCode, setStockCode] = useState("");
+  const [quantity, setQuantity] = useState("");
+  const [unit, setUnit] = useState("ADET");
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState("");
   const [scanError, setScanError] = useState("");
@@ -15,6 +17,17 @@ export default function NewExpensePage() {
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const params = useParams();
   const projectId = params.id;
+
+  const units = [
+    "ADET",
+    "KİLO",
+    "METRE",
+    "SET",
+    "METREKÜP",
+    "TAKIM",
+    "TON",
+    "PAKET"
+  ];
 
   const startScanner = () => {
     setIsScanning(true);
@@ -127,7 +140,7 @@ export default function NewExpensePage() {
       <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-5">
         {/* Header */}
         <div className="flex items-center mb-6">
-          <Link href={`/dashboard/projects/${projectId}`} className="mr-2">
+          <Link href={`/projects/${projectId}`} className="mr-2">
             <ArrowLeft size={20} />
           </Link>
           <h1 className="text-xl font-bold">Yeni Gider Ekle</h1>
@@ -170,9 +183,52 @@ export default function NewExpensePage() {
           </div>
         )}
 
+        {/* Quantity and Unit Fields - Only show after a stock code is entered/scanned */}
+        {stockCode && (
+          <div className="mb-6">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 mb-1">
+                  Miktar
+                </label>
+                <input
+                  type="number"
+                  id="quantity"
+                  value={quantity}
+                  onChange={(e) => setQuantity(e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Miktarı girin"
+                  min="0"
+                  step="any"
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="unit" className="block text-sm font-medium text-gray-700 mb-1">
+                  Ölçü Birimi
+                </label>
+                <select
+                  id="unit"
+                  value={unit}
+                  onChange={(e) => setUnit(e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  required
+                >
+                  {units.map((unitOption) => (
+                    <option key={unitOption} value={unitOption}>
+                      {unitOption}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Add Expense Button (non-functional for now) */}
         <button 
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-md shadow-sm"
+          className={`w-full ${stockCode && quantity ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed'} text-white font-bold py-3 px-4 rounded-md shadow-sm`}
+          disabled={!stockCode || !quantity}
         >
           Gider Ekle
         </button>

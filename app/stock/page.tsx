@@ -25,7 +25,7 @@ import Papa from 'papaparse';
 
 const StockPage = () => {
   const [stockCode, setStockCode] = useState('');
-  const [measurementUnit, setMeasurementUnit] = useState('kg');
+  const [measurementUnit, setMeasurementUnit] = useState('ADET');
   const [description, setDescription] = useState('');
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -75,7 +75,7 @@ const StockPage = () => {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => generateQrCode(props.row.original.stock_code)}
+          onClick={() => generateQrCode(props.row.original.stock_code,props.row.original.measurement_unit)}
           disabled={generatingQr}
           className="flex items-center"
         >
@@ -152,7 +152,7 @@ const StockPage = () => {
         description,
       });
       setStockCode('');
-      setMeasurementUnit('kg');
+      setMeasurementUnit('ADET');
       setDescription('');
       setSuccessMessage('Stok öğesi başarıyla eklendi!');
       setTimeout(() => setSuccessMessage(''), 3000);
@@ -164,12 +164,14 @@ const StockPage = () => {
     }
   };
 
-  const generateQrCode = async (stockCode) => {
+  const generateQrCode = async (stockCode, mesurementUnit) => {
     // ...generateQrCode fonksiyonu aynen korunuyor
     try {
       setGeneratingQr(true);
       const response = await axios.post('/qrcode', 
-        { data: stockCode }, 
+        { code: stockCode,
+          mesurement: mesurementUnit
+         }, 
         { 
           responseType: 'blob',
           headers: {

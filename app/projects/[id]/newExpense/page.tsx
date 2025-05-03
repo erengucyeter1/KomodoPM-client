@@ -87,7 +87,16 @@ export default function NewExpensePage() {
                 },
                 (decodedText) => {
                   // QR code successfully scanned
-                  setStockCode(decodedText);
+                  
+                  const parts = decodedText.split(";");
+                  if (parts.length !== 2) {
+                    setScanError("Geçersiz QR kod formatı");
+                    return;
+                  }
+                  const [code, mesurement] = parts;
+
+                  setStockCode(code);
+                  setUnit(mesurement);
                   setScanResult(decodedText);
                   setScanStatus("QR kod başarıyla tarandı!");
                   stopScanner();
@@ -168,7 +177,7 @@ export default function NewExpensePage() {
               <span className="ml-1">{isScanning ? "Durdur" : "Tara"}</span>
             </button>
           </div>
-          {scanResult && <p className="text-sm text-green-600 mt-1">Tarama başarılı: {scanResult}</p>}
+          {scanResult && <p className="text-sm text-green-600 mt-1">Tarama başarılı!</p>}
           {scanError && <p className="text-sm text-red-600 mt-1">{scanError}</p>}
           {scanStatus && !scanError && <p className="text-sm text-blue-600 mt-1">{scanStatus}</p>}
         </div>

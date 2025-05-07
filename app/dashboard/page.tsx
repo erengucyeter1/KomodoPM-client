@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAuth } from "@/hooks/useAuth";
-import { useRouter } from "next/navigation";
+import { useAuth, User } from "@/hooks/useAuth";
 import Card from "@/components/ui/card/Card";
 import Loading from "@/components/ui/feedback/Loading";
 import Button from "@/components/ui/button/Button";
@@ -15,8 +14,7 @@ interface DashboardStats {
 }
 
 export default function DashboardPage() {
-  const { user, loading } = useAuth();
-  const router = useRouter();
+  const { user, loading } = useAuth() as { user: User | null; loading: boolean };
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 

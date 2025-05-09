@@ -13,7 +13,7 @@ export default function OptionalInfoPart({ form }: { form: UseFormReturn<any> })
                                     <FormLabel>Belgenin İndirime Konu Edildiği KDV Dönemi
                                     </FormLabel>
                                     <FormControl>
-                                        <Input className="max-w-[240px]" placeholder="Opsiyonel" {...field} />
+                                        <Input className="max-w-[240px]" placeholder="Opsiyonel" {...field} value={field.value || ""} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -29,7 +29,7 @@ export default function OptionalInfoPart({ form }: { form: UseFormReturn<any> })
                                     <FormLabel>Belgenin Yüklenildiği KDV Dönemi
                                     </FormLabel>
                                     <FormControl>
-                                        <Input className="max-w-[240px]" placeholder="Opsiyonel" {...field} />
+                                        <Input className="max-w-[240px]" placeholder="Opsiyonel" {...field} value={field.value || ""} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -44,7 +44,7 @@ export default function OptionalInfoPart({ form }: { form: UseFormReturn<any> })
                                     <FormLabel>Yüklenim Türü
                                     </FormLabel>
                                     <FormControl>
-                                        <Input type = "number" step="any"  min = "0" className="max-w-[240px]" placeholder="Opsiyonel" {...field} />
+                                        <Input type = "number" step="any"  min = "0" className="max-w-[240px]" placeholder="Opsiyonel" {...field} value={field.value || ""} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>

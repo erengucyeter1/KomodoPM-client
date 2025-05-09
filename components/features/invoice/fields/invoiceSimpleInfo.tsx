@@ -37,7 +37,7 @@ export default function SimpleInfoPart({ form }: { form: UseFormReturn<any> }){
                                 <FormItem>
                                     <FormLabel>Fatura Numarası</FormLabel>
                                     <FormControl>
-                                        <Input className="max-w-[240px]" placeholder="Fatura Numarası" {...field} />
+                                        <Input className="max-w-[240px]" placeholder="Fatura Numarası" {...field}  value={field.value || ""}/>
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -74,12 +74,12 @@ export default function SimpleInfoPart({ form }: { form: UseFormReturn<any> }){
 
                         <FormField
                             control={form.control}
-                            name="partnerID"
+                            name="partnerTaxNumber"
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Müşteri / Tedarikçi Numarası</FormLabel>
                                     <FormControl>
-                                        <Input className="max-w-[240px]"  placeholder="Vergi veya Kimlik Numarası" {...field} />
+                                        <Input className="max-w-[240px]"  placeholder="Vergi veya Kimlik Numarası" {...field} value={field.value || ""}/>
                                     </FormControl>
                                 </FormItem>
                             )}

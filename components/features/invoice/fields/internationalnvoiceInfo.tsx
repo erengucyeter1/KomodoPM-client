@@ -36,7 +36,7 @@ export default function InternationalInfo({ form }: { form: UseFormReturn<any> }
             {transactionType === TransactionType.Ithalat || transactionType === "Ithalat" ? (
                 <FormField
                     control={form.control}
-                    name="importCountryCode" // Boşluk kaldırıldı
+                    name="importCountryCode"
                     render={({ field }) => (
                         <FormItem>
                             <FormLabel>İthal Edildiği Ülke Kodu</FormLabel>
@@ -44,8 +44,10 @@ export default function InternationalInfo({ form }: { form: UseFormReturn<any> }
                                 <Input 
                                     className="max-w-[240px]" 
                                     placeholder="Ülke Kodu" 
+                                    max={2}
+
                                     {...field} 
-                                    value={field.value || ""} // Burada undefined yerine boş string kullan
+                                    value={field.value || ""}
                                 />
                             </FormControl>
                             <FormMessage />
@@ -63,6 +65,7 @@ export default function InternationalInfo({ form }: { form: UseFormReturn<any> }
                                 <Input 
                                     className="max-w-[240px]" 
                                     placeholder="Ülke Kodu" 
+                                    max={2}
                                     {...field} 
                                     value={field.value || ""} // Burada undefined yerine boş string kullan
                                 />

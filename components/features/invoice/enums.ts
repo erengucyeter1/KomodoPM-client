@@ -1,14 +1,14 @@
 
 export enum InvoiceType {
-    Satis = "Satış",
-    Alis = "Alış",
+    Satis = "Satis",
+    Alis = "Alis",
 }
 
 
 export enum TransactionType{
-    Ihracat = "İhracat",
-     Ithalat = "İthalat",
-     YurtIci = "Yurt İçi"
+    Ihracat = "Ihracat",
+     Ithalat = "Ithalat",
+     YurtIci = "YurtIci"
 }
 
 export enum CurrencyType {

@@ -41,21 +41,23 @@ export default function NewExpensePage() {
   };
 
   const stopScanner = () => {
-    if (scannerRef.current && scannerRef.current.isScanning) {
-      scannerRef.current.stop()
-        .then(() => {
-          setIsScanning(false);
-          setScanStatus("");
-        })
-        .catch(error => {
-          console.error("Error stopping scanner:", error);
-          setScanError("Kamera kapatılırken hata oluştu");
-        });
-    } else {
-      setIsScanning(false);
-      setScanStatus("");
-    }
-  };
+  if (scannerRef.current) {
+    scannerRef.current
+      .stop()
+      .then(() => {
+        setIsScanning(false);
+        setScanStatus("");
+        scannerRef.current = null; // Scanner instance'ı temizle
+      })
+      .catch(error => {
+        console.error("Error stopping scanner:", error);
+        setScanError("Kamera kapatılırken hata oluştu");
+      });
+  } else {
+    setIsScanning(false);
+    setScanStatus("");
+  }
+};
 
   // Initialize scanner after DOM is ready
   useEffect(() => {
@@ -141,13 +143,13 @@ export default function NewExpensePage() {
   }, [isScanning]);
 
   useEffect(() => {
-    return () => {
-      // Cleanup function to ensure scanner is stopped when component unmounts
-      if (scannerRef.current && scannerRef.current.isScanning) {
-        scannerRef.current.stop().catch(console.error);
-      }
-    };
-  }, []);
+  return () => {
+    if (scannerRef.current) {
+      scannerRef.current.stop().catch(console.error);
+      scannerRef.current = null;
+    }
+  };
+}, []);
 
 
  useEffect(() => {
@@ -211,7 +213,7 @@ export default function NewExpensePage() {
           {scanStatus && !scanError && <p className="text-sm text-blue-600 mt-1">{scanStatus}</p>}
         </div>
 
-        {stockInfo && (
+        {stockInfo&& stockCode && (
           <div>
           <div className="flex items-center mb-2">
               <p className = "text-l text-green-500">Kullanılabilir miktar: {stockInfo?.balance} {stockInfo?.measurement_unit}</p>
@@ -239,7 +241,7 @@ export default function NewExpensePage() {
         )}
 
         {/* Quantity and Unit Fields - Only show after a stock code is entered/scanned */}
-        {stockInfo && (
+        {stockInfo && stockCode && (
           <div className="mb-6">
             <div className="grid grid-cols-2 gap-4">
               <div>

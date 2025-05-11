@@ -10,12 +10,13 @@ import {
 } from "@/components/ui/form"
 import NewInvoiceDetailKDVForm from "@/components/features/invoice/fields/newInvoiceDetailKDVForm"
 import NewInvoiceDetailProductForm from "@/components/features/invoice/fields/newInvoiceDetailProductForm"
-
+import axiosInstance from "@/utils/axios"
+import { useState } from "react"
 
 const formSchema = z.object({
 
     //Product
-
+    invoiceNumber: z.string().min(1, {message: 'Fatura numarası boş olamaz.'}),
     product_code: z.string().min(1, {message: 'Ürün kodu boş olamaz.'}),
     quantity: z.string().min(1, {message: 'Miktar boş olamaz.'}),
     unitPrice: z.string().min(1, {message: 'Birim fiyatı boş olamaz.'}),
@@ -34,11 +35,18 @@ const formSchema = z.object({
     
 })
 
-export function NewInvoiceDetailFormPage() {
+export function NewInvoiceDetailFormPage({ invoiceInfo }: { invoiceInfo: string }) {
+
+        const [errMsg, setErrMsg] = useState<string | null>(null);
+        const [successMsg, setSuccessMsg] = useState<string | null>(null);
+        const [invoiceNumber, setInvoiceNumber] = useState<string>(invoiceInfo);
+
+
   
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
+            invoiceNumber: invoiceNumber,
             vatRate: "18",
             vatAmount: "0.00",
             isVatExempt: false,
@@ -47,14 +55,33 @@ export function NewInvoiceDetailFormPage() {
                    
         },
     })
+
+
+    
     
     function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values)
-    
+
+        
+
+        axiosInstance.post("/invoice-detail", values)
+            .then(response => {
+                console.log("Invoice created successfully:", response.data);
+                // Clear any previous error messages
+                setErrMsg(null);
+                console.log(response);
+                setSuccessMsg(response?.data?.id + " Numaralı Fatura Detayı Başarıyla Kaydedildi!" );
+                
+            })
+            .catch(error => {
+                setErrMsg(error.response?.data?.message || "Bir hata oluştu.");
+                setSuccessMsg(null);
+
+            });
     // Küçük bir gecikme ile resetleme
     setTimeout(() => {
         form.reset({
-            vatRate: "18",
+
+        vatRate: "18",
         vatAmount: "0.00",
         isVatExempt: false,
         vatExemptionReason: "",
@@ -72,6 +99,34 @@ export function NewInvoiceDetailFormPage() {
 
     return (
         <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
+
+
+        {errMsg && (
+            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded relative" role="alert">
+                <span className="block sm:inline">{errMsg}</span>
+                <button
+                    type="button"
+                    className="absolute top-0 bottom-0 right-0 px-4 py-3"
+                    onClick={() => setErrMsg(null)}
+                >
+                    <span className="text-2xl">&times;</span>
+                </button>
+            </div>
+        )}
+
+        {successMsg && (
+            <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded relative" role="alert">
+                <span className="block sm:inline">{successMsg}</span>
+                <button
+                    type="button"
+                    className="absolute top-0 bottom-0 right-0 px-4 py-3"
+                    onClick={() => setErrMsg(null)}
+                >
+                    <span className="text-2xl">&times;</span>
+                </button>
+            </div>
+        )}
+
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                 <div className="flex flex-col gap-4">

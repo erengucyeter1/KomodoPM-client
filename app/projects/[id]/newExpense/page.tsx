@@ -5,6 +5,7 @@ import { Html5Qrcode } from "html5-qrcode";
 import { ArrowLeft, Scan } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import axiosInstance from "@/utils/axios";
 
 export default function NewExpensePage() {
   const [stockCode, setStockCode] = useState("");
@@ -17,6 +18,10 @@ export default function NewExpensePage() {
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const params = useParams();
   const projectId = params.id;
+
+
+  const [stockInfo, setStockInfo] = useState(null);
+  const [stockInfoErr, setStockInfoErr] = useState(null);
 
   const units = [
     "ADET",
@@ -144,6 +149,30 @@ export default function NewExpensePage() {
     };
   }, []);
 
+
+ useEffect(() => {
+  if (!stockCode) {
+    return;
+  }
+
+  axiosInstance
+    .get(`/stock/${stockCode}`)
+    .then((response) => {
+      // Stok bilgilerini burada kullanabilirsin
+      setStockInfo(response.data);
+      setStockInfoErr(null);
+      setUnit(response.data.measurement_unit);
+
+    })
+    .catch((error) => {
+      setStockInfoErr("Hatalı stok kodu veya stok bulunamadı");
+      setStockInfo(null);
+    });
+}, [stockCode]);
+
+
+
+
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-5">
@@ -182,6 +211,23 @@ export default function NewExpensePage() {
           {scanStatus && !scanError && <p className="text-sm text-blue-600 mt-1">{scanStatus}</p>}
         </div>
 
+        {stockInfo && (
+          <div>
+          <div className="flex items-center mb-2">
+              <p className = "text-l text-green-500">Kullanılabilir miktar: {stockInfo?.balance} {stockInfo?.measurement_unit}</p>
+
+            </div>
+        </div>
+        )}
+
+        {stockInfoErr && (
+          <div className="flex items-center mb-2">
+            <p className="text-sm text-red-600 mt-1">{stockInfoErr}</p>
+          </div>
+        )}
+
+
+
         {/* QR Scanner */}
         {isScanning && (
           <div className="mb-6">
@@ -193,7 +239,7 @@ export default function NewExpensePage() {
         )}
 
         {/* Quantity and Unit Fields - Only show after a stock code is entered/scanned */}
-        {stockCode && (
+        {stockInfo && (
           <div className="mb-6">
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -204,10 +250,16 @@ export default function NewExpensePage() {
                   type="number"
                   id="quantity"
                   value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  onChange={(e) => {
+                      const max = Number(stockInfo?.balance || 0);
+                      let val = Number(e.target.value);
+                      if (val > max) val = max;
+                      if (val < 0) val = 0;
+                      setQuantity(val.toString());
+                    }}                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Miktarı girin"
                   min="0"
+                  max= {stockInfo?.balance || "0"}
                   step="any"
                   required
                 />
@@ -219,7 +271,8 @@ export default function NewExpensePage() {
                 <select
                   id="unit"
                   value={unit}
-                  onChange={(e) => setUnit(e.target.value)}
+                  readOnly
+                  //onChange={(e) => setUnit(e.target.value)}
                   className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white"
                   required
                 >
@@ -233,6 +286,8 @@ export default function NewExpensePage() {
             </div>
           </div>
         )}
+
+        
 
         {/* Add Expense Button (non-functional for now) */}
         <button 

@@ -40,7 +40,13 @@ const formSchema = z.object({
     exportCountryCode : z.string().optional(),
 
     
-})
+}).refine(
+    (data) => data.invoiceType || data.transactionType,
+    {
+        message: "Fatura tipi veya işlem tipi alanlarından en az biri seçilmelidir.",
+        path: ["invoiceType"], // veya ["transactionType"], ya da ikisini de göstermek için []
+    }
+);
 
 export function NewInvoiceForm() {
   
@@ -49,7 +55,7 @@ export function NewInvoiceForm() {
         defaultValues: {
             invoiceNumber: "",
             partnerTaxNumber: "",
-            invoiceType: InvoiceType.Alis,
+            invoiceType: undefined,
             isInternational: false,
             transactionType: undefined,
             invoiceDate: new Date(),

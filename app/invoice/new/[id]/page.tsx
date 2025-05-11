@@ -5,8 +5,7 @@ import { useParams } from "next/navigation";
 export default function InvoicePage() {
 
   const params = useParams();
-  const invoiceId = params.id;
-
+  const invoiceId = params.id as string;
   return (
     <div className="flex flex-col items-center space-y-6 p-6 w-full">
       <div className="text-center">      
@@ -14,7 +13,7 @@ export default function InvoicePage() {
       </div>
       
       <div className="mt-6 w-full max-w-3xl">
-      <NewInvoiceDetailFormPage />
+        <NewInvoiceDetailFormPage invoiceInfo={invoiceId} />
       </div>
     </div>
   );

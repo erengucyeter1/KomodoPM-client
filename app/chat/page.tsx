@@ -1,12 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import UsersList from '@/components/features/chat/UsersList';
 import ChatPanel from '@/components/features/chat/ChatPanel';
 import EmptyStatePanel from '@/components/features/chat/EmptyStatePanel';
 import Card from '@/components/ui/card/Card';
 import { useChatService } from '@/hooks/useChatService';
-import { User } from '@/types/user';
 import Loading from '@/components/ui/feedback/Loading';
 
 export default function ChatPage() {

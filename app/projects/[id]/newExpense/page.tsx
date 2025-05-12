@@ -6,9 +6,18 @@ import { ArrowLeft, Scan } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import axiosInstance from "@/utils/axios";
+import {useAuth} from "@/hooks/useAuth";
+
+interface IProductEntity{
+  balance: string,
+  measurement_unit: string,
+}
+
+
 
 export default function NewExpensePage() {
   const [stockCode, setStockCode] = useState("");
+  const{user} = useAuth();
   const [quantity, setQuantity] = useState("");
   const [unit, setUnit] = useState("ADET");
   const [isScanning, setIsScanning] = useState(false);
@@ -20,8 +29,13 @@ export default function NewExpensePage() {
   const projectId = params.id;
 
 
-  const [stockInfo, setStockInfo] = useState(null);
-  const [stockInfoErr, setStockInfoErr] = useState(null);
+
+
+
+  const [stockInfo, setStockInfo] = useState<IProductEntity>();
+  const [stockInfoErr, setStockInfoErr] = useState<string>();
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
 
   const units = [
     "ADET",
@@ -157,20 +171,67 @@ export default function NewExpensePage() {
     return;
   }
 
-  axiosInstance
-    .get(`/stock/${stockCode}`)
-    .then((response) => {
-      // Stok bilgilerini burada kullanabilirsin
-      setStockInfo(response.data);
-      setStockInfoErr(null);
-      setUnit(response.data.measurement_unit);
+    axiosInstance
+      .get(`/stock/${stockCode}`)
+      .then((response) => {
+        // Stok bilgilerini burada kullanabilirsin
+        setStockInfo(response.data);
+        setStockInfoErr(undefined);
+        setUnit(response.data.measurement_unit);
 
-    })
-    .catch((error) => {
-      setStockInfoErr("Hatalı stok kodu veya stok bulunamadı");
-      setStockInfo(null);
-    });
-}, [stockCode]);
+      })
+      .catch((error) => {
+        setStockInfoErr("Hatalı stok kodu veya stok bulunamadı");
+        setStockInfo(undefined);
+      });
+  }, [stockCode]);
+
+  
+  const resetForm = () => {
+    setStockCode("");
+      setQuantity("");
+      setUnit("ADET");
+      setScanResult("");
+      setScanError("");
+      setScanStatus("");
+      setIsScanning(false);
+      setStockInfoErr(undefined);
+      setStockInfo(undefined);
+
+  }
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!stockCode || !quantity) {
+      return;
+    }
+
+    const data = {
+      creator_id: user?.id,
+      project_id: projectId,
+      product_code: stockCode,
+      product_count: quantity,
+    };
+
+    try {
+      await axiosInstance.post("/project-expense", data);
+      resetForm();
+      setSuccessMsg("Gider başarıyla eklendi!");
+      setTimeout(() => setSuccessMsg(null), 3000);
+
+      // Başarılı ekleme sonrası yapılacak işlemler
+    } catch (error) {
+      console.error("Gider eklenirken hata:", error);
+      // Hata durumunda yapılacak işlemler
+    }
+
+
+  }
+
+
+
+  
+
 
 
 
@@ -178,6 +239,13 @@ export default function NewExpensePage() {
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-5">
+
+
+        {successMsg && (
+          <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded relative" role="alert">
+            <span className="block sm:inline">{successMsg}</span>
+          </div>
+        )}
         {/* Header */}
         <div className="flex items-center mb-6">
           <Link href={`/projects/${projectId}`} className="mr-2">
@@ -185,6 +253,8 @@ export default function NewExpensePage() {
           </Link>
           <h1 className="text-xl font-bold">Yeni Gider Ekle</h1>
         </div>
+
+        
 
         {/* Stock Code Input */}
         <div className="mb-6">
@@ -273,7 +343,7 @@ export default function NewExpensePage() {
                 <select
                   id="unit"
                   value={unit}
-                  readOnly
+                  disabled
                   //onChange={(e) => setUnit(e.target.value)}
                   className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white"
                   required
@@ -295,6 +365,8 @@ export default function NewExpensePage() {
         <button 
           className={`w-full ${stockCode && quantity ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed'} text-white font-bold py-3 px-4 rounded-md shadow-sm`}
           disabled={!stockCode || !quantity}
+          onClick={onSubmit}
+          
         >
           Gider Ekle
         </button>

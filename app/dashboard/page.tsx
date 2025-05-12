@@ -16,7 +16,6 @@ interface DashboardStats {
 
 export default function DashboardPage() {
   const { user, loading } = useAuth();
-  const router = useRouter();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -144,7 +143,7 @@ export default function DashboardPage() {
                 <span className="text-green-500 text-sm">PG</span>
               </div>
               <div>
-                <p className="text-sm">Proje güncellendi: Treyler Üretimi</p>
+                <p className="text-sm">Proje güncellendi: Römork Üretimi</p>
                 <p className="text-xs text-gray-500">Dün</p>
               </div>
             </div>

@@ -11,8 +11,8 @@ import { useForm } from "react-hook-form";
 import { format } from "date-fns";
 import { useAuth } from "@/hooks/useAuth"; // Import the auth hook
 
-// Treyler model tipi
-interface TreylerModel {
+// trailer model tipi
+interface TrailerModel {
   id: number | string;
   name: string;
   description?: string;
@@ -45,9 +45,9 @@ export default function CreateProjectPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
-  const [selectedModel, setSelectedModel] = useState<TreylerModel | null>(null);
+  const [selectedModel, setSelectedModel] = useState<TrailerModel | null>(null);
   // Yeni state değişkenleri
-  const [models, setModels] = useState<TreylerModel[]>([]);
+  const [models, setModels] = useState<TrailerModel[]>([]);
   const [loadingModels, setLoadingModels] = useState(true);
   
   const { register, handleSubmit, watch, formState: { errors } } = useForm<ProjectFormData>({
@@ -58,22 +58,22 @@ export default function CreateProjectPage() {
     }
   });
   
-  // Treyler modellerini backend'den çek
+  // trailer modellerini backend'den çek
   useEffect(() => {
-    const fetchTreylerModels = async () => {
+    const fetchTrailerModels = async () => {
       try {
         setLoadingModels(true);
-        const response = await axiosInstance.get('/treylers');
+        const response = await axiosInstance.get('/trailers');
         setModels(response.data);
       } catch (err) {
-        console.error("Error fetching treyler models:", err);
+        console.error("Römork modelleri çekilirken bir hata oluştu:", err);
         // Hata durumunda UI'da özel bir gösterim istemiyorsanız state'e kaydetmeye gerek yok
       } finally {
         setLoadingModels(false);
       }
     };
 
-    fetchTreylerModels();
+    fetchTrailerModels();
   }, []);
   
   const watchModelId = watch("model_id");

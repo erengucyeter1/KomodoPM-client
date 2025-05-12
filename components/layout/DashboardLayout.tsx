@@ -16,8 +16,13 @@ interface MenuItem {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
   const pathname = usePathname();
-  
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   // Navbar her zaman gösterilsin, sidebar sadece belirli sayfalarda gösterilsin
 
   if (pathname.startsWith("/auth")) {
@@ -58,6 +63,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       permissions: ['see:projects']
     },
     {
+      title: "Römorklar",
+      path: "/projects/trailers",
+      icon: (
+        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 17h2m10 0h2M3 17h1m16 0h1M6 10V5h12v10M6 5H4a1 1 0 00-1 1v11h1m16 0h1V6a1 1 0 00-1-1h-2M4 15h16M6 15v2m12-2v2" />
+        </svg>
+            ),
+      permissions: ['see:trailers']
+    },
+    {
       title: "Mesajlar",
       path: "/chat",
       icon: (
@@ -65,7 +80,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
         </svg>
       ),
-      permissions: []
+      permissions: ['see:chat']
     },
     {
       title: "Stok",
@@ -143,7 +158,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   if (item.requiredPermission && user?.authorization_rank < item.requiredPermission) {
                     return null; // Don't render this menu item
                   }
-                  
+
+                  if (!isMounted) {
+                    return null; // Sunucuda veya ilk client render'da (hydration öncesi)
+                  }
+
                   const isActive = pathname === item.path || pathname.startsWith(`${item.path}/`);
                   
                   return (

@@ -10,9 +10,10 @@ import Loading from "@/components/ui/feedback/Loading";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import Link from "next/link";
+import { Download } from "lucide-react"; // Yeni ikon için import
 
 // Type definitions
-interface TreylerType {
+interface TrailerType {
   id: string;
   name: string;
   description?: string;
@@ -64,7 +65,7 @@ interface Project {
   created_at: string;
   last_updated?: string;
   creator?: User;
-  treyler_type?: TreylerType;
+  treyler_type?: TrailerType;
   project_expenses?: ProjectExpense[];
 }
 
@@ -77,6 +78,7 @@ export default function ProjectDetailPage() {
   const [projectExpenses, setProjectExpenses] = useState<ProjectExpense[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isDownloadingReport, setIsDownloadingReport] = useState(false); // Rapor indirme durumu için state
 
   // Helper function to format status
   const getStatusInfo = (status: string) => {
@@ -123,6 +125,95 @@ export default function ProjectDetailPage() {
     fetchExpenses();
   }, [projectId]);
 
+  const handleDownloadReport = async () => {
+    setIsDownloadingReport(true);
+    setError(""); // Önceki hataları temizle
+
+    try {
+      const response = await axiosInstance.get(
+        `/report/project/${projectId}`, // Backend endpoint'i
+        {
+          responseType: 'blob', // Yanıtın bir Blob olarak işlenmesini sağlar
+          timeout: 60000, // İsteğin zaman aşımını ayarla (örneğin 60 saniye)
+        }
+      );
+
+      // Yanıtı ve veriyi kontrol et
+      if (!response.data || response.data.size === 0) {
+        console.error('Alınan veri boş veya geçersiz.', response);
+        throw new Error('Sunucudan boş veya geçersiz rapor verisi alındı.');
+      }
+
+      // Gelen Blob'un MIME türünü kontrol et (isteğe bağlı ama iyi bir pratik)
+      // Sunucu 'application/pdf' gönderiyor olmalı
+      if (response.data.type && response.data.type !== 'application/pdf') {
+        // Eğer beklenmedik bir tip gelirse, bu bir sorun olabilir.
+        // Ancak bazen sunucular Content-Type'ı blob içinde göndermeyebilir,
+        // bu yüzden bu kontrolü çok katı yapmamak gerekebilir.
+        // Şimdilik sadece loglayalım.
+        console.warn('Alınan Blob türü beklenenden farklı:', response.data.type);
+      }
+
+      // Blob'dan bir dosya oluştur
+      // response.data zaten bir Blob olduğu için doğrudan kullanılabilir.
+      // new Blob([response.data], { type: 'application/pdf' }) yapmak genellikle gereksizdir
+      // eğer response.data zaten doğru MIME tipinde bir Blob ise.
+      // Ancak, MIME tipini zorlamak için kullanılabilir.
+      const fileBlob = new Blob([response.data], { type: 'application/pdf' });
+
+      // İndirme için bir URL oluştur
+      const fileURL = URL.createObjectURL(fileBlob);
+
+      // İndirme işlemini tetiklemek için geçici bir link oluştur
+      const downloadLink = document.createElement('a');
+      downloadLink.href = fileURL;
+      downloadLink.setAttribute('download', `proje-raporu-${projectId}.pdf`); // İndirilecek dosyanın adı
+
+      // Linki DOM'a ekle, tıkla ve sonra kaldır
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+
+      // Oluşturulan Object URL'yi serbest bırak
+      URL.revokeObjectURL(fileURL);
+
+    } catch (err: any) {
+      console.error("Rapor indirilirken bir hata oluştu:", err);
+      let errorMessage = "Rapor indirilirken bilinmeyen bir sorun oluştu.";
+
+      if (err.response) {
+        // Sunucudan bir hata yanıtı geldiyse (örneğin JSON formatında bir hata)
+        // responseType: 'blob' olduğu için err.response.data bir Blob olabilir.
+        // Bu Blob'u metne çevirip hata mesajını almaya çalışalım.
+        if (err.response.data instanceof Blob) {
+          try {
+            const errorBlobText = await err.response.data.text();
+            // Hata mesajının JSON formatında olduğunu varsayalım
+            const parsedError = JSON.parse(errorBlobText);
+            errorMessage = parsedError.message || parsedError.error || errorBlobText || "Sunucudan hata detayı alınamadı.";
+          } catch (parseOrReadError) {
+            errorMessage = "Sunucudan gelen hata mesajı okunamadı veya çözümlenemedi.";
+          }
+        } else if (err.response.data && (err.response.data.message || err.response.data.error)) {
+          errorMessage = err.response.data.message || err.response.data.error;
+        } else if (typeof err.response.data === 'string' && err.response.data.trim() !== '') {
+          errorMessage = err.response.data;
+        } else if (err.response.statusText) {
+          errorMessage = `Sunucu hatası: ${err.response.status} ${err.response.statusText}`;
+        }
+      } else if (err.request) {
+        // İstek yapıldı ama yanıt alınamadı
+        errorMessage = "Sunucuya ulaşılamadı. Lütfen ağ bağlantınızı kontrol edin.";
+      } else if (err.message) {
+        // İsteği ayarlarken veya başka bir şeyde bir sorun oluştu
+        errorMessage = err.message;
+      }
+      setError(errorMessage);
+    } finally {
+      setIsDownloadingReport(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -163,16 +254,19 @@ export default function ProjectDetailPage() {
         </div>
 
         <div className="flex gap-3">
-          <Link href={`/projects/${projectId}/newExpense`}>
-            <Button>
-              <span className="flex items-center gap-2">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          <Button onClick={handleDownloadReport} disabled={isDownloadingReport}>
+            <span className="flex items-center gap-2">
+              {isDownloadingReport ? (
+                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                Gider Ekle
-              </span>
-            </Button>
-          </Link>
+              ) : (
+                <Download size={20} />
+              )}
+              {isDownloadingReport ? "Oluşturuluyor..." : "Rapor Oluştur"}
+            </span>
+          </Button>
         </div>
       </div>
 

@@ -4,13 +4,13 @@ import { useState, useEffect } from "react";
 import Button from "@/components/ui/button/Button";
 import Alert from "@/components/ui/feedback/Alert";
 
-interface TreylerFormProps {
+interface TrailerFormProps {
   initialData?: any;
   onSubmit: (formData: any) => Promise<{error?: string} | void>;
   onCancel: () => void;
 }
 
-export default function TreylerForm({ initialData, onSubmit, onCancel }: TreylerFormProps) {
+export default function TrailerForm({ initialData, onSubmit, onCancel }: TrailerFormProps) {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -74,7 +74,7 @@ export default function TreylerForm({ initialData, onSubmit, onCancel }: Treyler
     setError("");
     
     if (!formData.name.trim()) {
-      setError("Lütfen bir treyler adı girin.");
+      setError("Lütfen bir römork adı girin.");
       return;
     }
 
@@ -95,7 +95,7 @@ export default function TreylerForm({ initialData, onSubmit, onCancel }: Treyler
       
       <div>
         <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-          Treyler Adı
+          Römork Adı
         </label>
         <input
           type="text"
@@ -104,7 +104,7 @@ export default function TreylerForm({ initialData, onSubmit, onCancel }: Treyler
           value={formData.name}
           onChange={handleChange}
           className="block w-full rounded-md border border-gray-300 shadow-sm py-2 px-3 focus:outline-none focus:ring-[#063554] focus:border-[#063554]"
-          placeholder="Treyler adını giriniz"
+          placeholder="Römork adını giriniz"
           required
         />
       </div>
@@ -120,13 +120,13 @@ export default function TreylerForm({ initialData, onSubmit, onCancel }: Treyler
           onChange={handleChange}
           rows={3}
           className="block w-full rounded-md border border-gray-300 shadow-sm py-2 px-3 focus:outline-none focus:ring-[#063554] focus:border-[#063554]"
-          placeholder="Treyler açıklaması giriniz"
+          placeholder="Römork açıklaması giriniz"
         />
       </div>
 
       <div>
         <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-1">
-          Treyler Görseli
+          Römork Görseli
         </label>
         <input
           type="file"
@@ -146,7 +146,7 @@ export default function TreylerForm({ initialData, onSubmit, onCancel }: Treyler
           <div className="relative h-48 bg-gray-100 rounded border">
             <img 
               src={imagePreview} 
-              alt="Treyler önizleme" 
+              alt="Römork önizleme" 
               className="absolute inset-0 w-full h-full object-contain"
             />
           </div>

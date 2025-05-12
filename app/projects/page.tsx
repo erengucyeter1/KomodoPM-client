@@ -12,7 +12,7 @@ import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { useSearchParams } from 'next/navigation';
 
-interface TreylerType {
+interface TrailerType {
   id: string;
   name: string;
   description?: string;
@@ -36,7 +36,7 @@ interface Project {
   creator_id?: number;
   treyler_type_id?: number;
   description?: string;
-  treyler_type?: TreylerType; // Add the treyler_type property
+  treyler_type?: TrailerType; // Add the treyler_type property
 }
 
 export default function ProjectsPage() {

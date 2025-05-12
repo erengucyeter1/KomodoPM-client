@@ -23,13 +23,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     setIsMounted(true);
   }, []);
 
-  // Navbar her zaman gösterilsin, sidebar sadece belirli sayfalarda gösterilsin
-
   if (pathname.startsWith("/auth")) {
-    return <>{children}</>; // Login ve Register sayfalarında sadece children render ediliyor
+    return <>{children}</>;
   }
-  const showNavbar = true; // Her zaman göster
-  const showSidebar = true; // Tüm sayfalarda göstermek istiyoruz
+  const showNavbar = true;
+  const showSidebar = true;
 
   const menuItems: MenuItem[] = [
     {
@@ -96,9 +94,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen bg-gray-100">
-      {/* Üst Navbar - Her zaman göster */}
+      {/* Üst Navbar - Sabitlendi */}
       {showNavbar && (
-        <nav className="bg-[#063554] shadow-md">
+        <nav className="bg-[#063554] shadow-md fixed w-full top-0 z-20">
           <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between h-16">
               <div className="flex">
@@ -143,13 +141,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </nav>
       )}
 
-      <div className="flex">
-        {/* Sidebar */}
+      {/* Sidebar ve Ana İçerik Kapsayıcısı - Navbar için üstten padding eklendi */}
+      <div className="flex pt-16">
+        {/* Sidebar - Sabitlendi ve navbar'ın altına konumlandırıldı */}
         {showSidebar && (
           <aside
             className={`${
               isSidebarOpen ? "w-64" : "w-20"
-            } bg-[#447494] text-white h-[calc(100vh-64px)] transition-all duration-300 overflow-y-auto fixed z-10`}
+            } bg-[#447494] text-white h-[calc(100vh-64px)] transition-all duration-300 overflow-y-auto fixed z-10 top-16`}
           >
             <div className="py-4">
               <ul className="space-y-1">
@@ -190,7 +189,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </aside>
         )}
 
-        {/* Main content */}
+        {/* Main content - Sol margin ayarları sidebar genişliğine göre devam ediyor */}
         <main
           className={`flex-1 ${
             showSidebar && isSidebarOpen ? "ml-64" : showSidebar ? "ml-20" : "ml-0"

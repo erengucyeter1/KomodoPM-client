@@ -62,12 +62,27 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     },
     {
       title: "Römorklar",
-      path: "/projects/trailers",
+      path: "/trailers",
       icon: (
-        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 17h2m10 0h2M3 17h1m16 0h1M6 10V5h12v10M6 5H4a1 1 0 00-1 1v11h1m16 0h1V6a1 1 0 00-1-1h-2M4 15h16M6 15v2m12-2v2" />
-        </svg>
-            ),
+        <svg className="h-5 w-5" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    {/* Ayak */}
+    <line x1="2" y1="18" x2="2" y2="28" />
+    <line x1="0.5" y1="28" x2="3.5" y2="28" />
+
+    {/* Ön bağlantı */}
+    <line x1="0" y1="18" x2="8" y2="18" />
+
+    {/* Gövde */}
+    <polyline points="8,18 10,22 26,22" />
+
+    {/* Tekerlekler */}
+    <circle cx="20" cy="28" r="2.5" fill="currentColor" stroke="none" />
+    <circle cx="26" cy="28" r="2.5" fill="currentColor" stroke="none" />
+
+    {/* Arka çıkıntı */}
+    <line x1="28" y1="22" x2="31" y2="22" />
+  </svg>
+      ),
       permissions: ['see:trailers']
     },
     {
@@ -79,6 +94,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </svg>
             ),
       permissions: ['see:invoices']
+    },
+    {
+      title: "Partnerler",
+      path: "/partners",
+      icon: (
+        <svg className="h-5 w-5" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    {/* Müşteri figürü (ön planda küçük) */}
+    <circle cx="10" cy="10" r="3" />
+    <path d="M6 20c0-2 2-4 4-4s4 2 4 4" />
+
+    {/* Satıcı figürü (arka planda büyük) */}
+    <circle cx="22" cy="8" r="4" />
+    <path d="M16 20c0-3 3-5 6-5s6 2 6 5" />
+  </svg>
+      ),
+      permissions: ['see:partners']
     },
     {
       title: "Mesajlar",

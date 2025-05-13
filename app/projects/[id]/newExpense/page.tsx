@@ -278,6 +278,7 @@ export default function NewExpensePage() {
               <span className="ml-1">{isScanning ? "Durdur" : "Tara"}</span>
             </button>
           </div>
+          
           {scanResult && <p className="text-sm text-green-600 mt-1">Tarama başarılı!</p>}
           {scanError && <p className="text-sm text-red-600 mt-1">{scanError}</p>}
           {scanStatus && !scanError && <p className="text-sm text-blue-600 mt-1">{scanStatus}</p>}
@@ -370,6 +371,11 @@ export default function NewExpensePage() {
         >
           Gider Ekle
         </button>
+        <div className="flex justify-end">
+          <Link href={`/projects/${projectId}/newServiceExpense`} className="mr-2">
+            <p className="text-sm text-blue-500 mt-1 justify-items-end">Gider bir servis mi?</p>
+          </Link>
+          </div>
       </div>
     </div>
   );

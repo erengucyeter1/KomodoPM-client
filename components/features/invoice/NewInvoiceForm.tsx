@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -49,7 +49,7 @@ const formSchema = z.object({
 );
 
 export function NewInvoiceForm() {
-  
+    const router = useRouter();
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -65,44 +65,63 @@ export function NewInvoiceForm() {
     })
 
     const [errMsg, setErrMsg] = useState<string | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
+    async function onSubmit(values: z.infer<typeof formSchema>) {
+        setIsSubmitting(true);
+        setErrMsg(null);
 
+        try {
+            // First check if partner exists
+            const partnerResponse = await axiosInstance.get(`/customer-supplier/tax/${values.partnerTaxNumber}`);
+            
+            if (!partnerResponse.data || partnerResponse.data.length === 0) {
+                setErrMsg("Geçerli bir müşteri/tedarikçi vergi numarası gereklidir. Önce müşteri/tedarikçi eklemelisiniz.");
+                setIsSubmitting(false);
+                return;
+            }
 
-    
-    function onSubmit(values: z.infer<typeof formSchema>) {
-
-        console.log("Form values:", values)
-        // Perform the API call here
-        axiosInstance.post("/invoice", values)
-            .then(response => {
-                console.log("Invoice created successfully:", response.data);
-                // Clear any previous error messages
-                setErrMsg(null);
-                // Import useRouter from 'next/navigation' at the top of your file
-                const router = form.getValues("invoiceNumber");
-                window.location.href = `/invoice/new/${router}`;
-            })
-            .catch(error => {
-                setErrMsg(error.response?.data?.message || "Bir hata oluştu.");
-
-            });
-
-
-
-        
-        
-        
+            // If partner exists, submit the form
+            const response = await axiosInstance.post("/invoice", values);
+            console.log("Invoice created successfully:", response.data);
+            
+            const invoiceNumber = form.getValues("invoiceNumber");
+            window.location.href = `/invoice/new/${invoiceNumber}`;
+        } catch (error: any) {
+            if (error.response?.status === 404 && error.response?.data?.message?.includes('müşteri/tedarikçi')) {
+                setErrMsg("Bu vergi numarasına sahip müşteri/tedarikçi bulunamadı. Lütfen önce yeni müşteri/tedarikçi ekleyin.");
+                
+                // Wait a moment before redirecting to the new partner page
+                setTimeout(() => {
+                    router.push('/partners/new');
+                }, 3000);
+            } else {
+                setErrMsg(error.response?.data?.message || "Fatura oluşturulurken bir hata oluştu.");
+            }
+        } finally {
+            setIsSubmitting(false);
+        }
     }
 
-  
+    const handleCreatePartner = () => {
+        router.push('/partners/new');
+    };
 
     return (
         <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
-
         
         {errMsg && (
             <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded relative" role="alert">
                 <span className="block sm:inline">{errMsg}</span>
+                {errMsg.includes('müşteri/tedarikçi') && (
+                    <button 
+                        type="button" 
+                        className="ml-2 text-blue-600 hover:underline font-medium"
+                        onClick={handleCreatePartner}
+                    >
+                        Yeni Müşteri/Tedarikçi Ekle
+                    </button>
+                )}
                 <button
                     type="button"
                     className="absolute top-0 bottom-0 right-0 px-4 py-3"
@@ -113,21 +132,18 @@ export function NewInvoiceForm() {
             </div>
         )}
 
-
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                 <div className="flex flex-col gap-4">
-                    
-                    <SimpleInfoPart form = {form}/>
-                    <InvoiceSecondaryInfoPart form = {form}/>
-                    <OptionalInfoPart form = {form}/>
-                    <InternationalInfo form = {form}/>
-                    
-
-
+                    <SimpleInfoPart form={form}/>
+                    <InvoiceSecondaryInfoPart form={form}/>
+                    <OptionalInfoPart form={form}/>
+                    <InternationalInfo form={form}/>
                 </div>
 
-                <Button type="submit">Gönder</Button>
+                <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? "Gönderiliyor..." : "Gönder"}
+                </Button>
             </form>
         </Form>
         </div>

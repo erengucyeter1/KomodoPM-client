@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form"
 import { z } from "zod"
 
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Form,
 } from "@/components/ui/form"
@@ -22,6 +23,7 @@ const formSchema = z.object({
     unitPrice: z.string().min(1, {message: 'Birim fiyatı boş olamaz.'}),
 
     description: z.string().optional(),
+    isService: z.boolean(),
 
 
 
@@ -30,6 +32,8 @@ const formSchema = z.object({
     vatAmount: z.string().min(-1, {message: 'Toplam tutar boş olamaz.'}),
     isVatExempt: z.boolean(),
     vatExemptionReason: z.string().optional(),    
+
+
     
 
     
@@ -55,6 +59,7 @@ export function NewInvoiceDetailFormPage({ invoiceInfo }: { invoiceInfo: string 
             vatAmount: "0.00",
             isVatExempt: false,
             vatExemptionReason: "",
+            isService: false,   
 
                    
         },
@@ -88,6 +93,7 @@ export function NewInvoiceDetailFormPage({ invoiceInfo }: { invoiceInfo: string 
                         vatAmount: "0.00",
                         isVatExempt: false,
                         vatExemptionReason: "",
+                        isService: false,
                     });
                 }, 0);
             })

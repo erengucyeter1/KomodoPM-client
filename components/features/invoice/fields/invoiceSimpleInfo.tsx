@@ -1,6 +1,9 @@
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
 import { UseFormReturn } from "react-hook-form"
 import { Input } from "@/components/ui/input"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import axiosInstance from "@/utils/axios"
 
 import { Calendar } from "@/components/ui/calendar"
 import {
@@ -28,6 +31,32 @@ import {InvoiceType, GetTypeOptions} from '../enums'
 
 
 export default function SimpleInfoPart({ form }: { form: UseFormReturn<any> }){
+    const router = useRouter();
+    const [partnerError, setPartnerError] = useState<string | null>(null);
+    const [isValidatingPartner, setIsValidatingPartner] = useState(false);
+
+    const validatePartnerTaxNumber = async (taxNumber: string) => {
+        if (!taxNumber) return;
+        
+        setIsValidatingPartner(true);
+        try {
+            const response = await axiosInstance.get(`/customer-supplier/tax/${taxNumber}`);
+            if (response.data && response.data.length > 0) {
+                setPartnerError(null);
+            } else {
+                setPartnerError("Bu vergi numarasına sahip müşteri/tedarikçi bulunamadı");
+            }
+        } catch (error) {
+            setPartnerError("Müşteri/tedarikçi doğrulanırken bir hata oluştu");
+        } finally {
+            setIsValidatingPartner(false);
+        }
+    };
+
+    const handleCreatePartner = () => {
+        router.push('/partners/new');
+    };
+
     return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <FormField
@@ -79,8 +108,34 @@ export default function SimpleInfoPart({ form }: { form: UseFormReturn<any> }){
                                 <FormItem>
                                     <FormLabel>Müşteri / Tedarikçi Numarası</FormLabel>
                                     <FormControl>
-                                        <Input className="max-w-[240px]"  placeholder="Vergi veya Kimlik Numarası" {...field} value={field.value || ""}/>
+                                        <div className="relative">
+                                            <Input 
+                                                className="max-w-[240px]"  
+                                                placeholder="Vergi veya Kimlik Numarası" 
+                                                {...field} 
+                                                value={field.value || ""}
+                                                onBlur={() => validatePartnerTaxNumber(field.value)}
+                                            />
+                                            {isValidatingPartner && (
+                                                <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                                                    <div className="animate-spin h-4 w-4 border-2 border-blue-500 rounded-full border-t-transparent"></div>
+                                                </div>
+                                            )}
+                                        </div>
                                     </FormControl>
+                                    {partnerError && (
+                                        <div className="text-red-500 text-sm mt-1">
+                                            {partnerError} 
+                                            <button 
+                                                type="button"
+                                                onClick={handleCreatePartner}
+                                                className="ml-1 text-blue-500 hover:underline"
+                                            >
+                                                Yeni ekle
+                                            </button>
+                                        </div>
+                                    )}
+                                    <FormMessage />
                                 </FormItem>
                             )}
                         />

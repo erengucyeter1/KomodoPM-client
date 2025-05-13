@@ -8,6 +8,9 @@ import {
     SelectValue,
   } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
+import { Checkbox } from "@/components/ui/checkbox"
+import { useEffect } from "react"
+import { v4 as uuidv4 } from 'uuid';
 
 
 export default function NewInvoiceDetailProductForm({ form }: { form: UseFormReturn<any> }){
@@ -16,10 +19,24 @@ export default function NewInvoiceDetailProductForm({ form }: { form: UseFormRet
     const isVatExempt = form.watch("isVatExempt")
 
 
+    const isService = form.watch("isService")
+
+    useEffect(() => {
+        if (isService) {
+            const uuid = uuidv4();
+          form.setValue("product_code", uuid);
+        } else {
+          form.setValue("product_code", "");
+        }
+      }, [isService, form]);
+
+
     return(
 
         <div className="grid grid-cols-1 space-y-6">
             <div className="grid md:grid-cols-3 gap-6">
+                 <div className="flex flex-row gap-6">
+                  <div>
                  <FormField
                             control={form.control}
                             name="product_code"
@@ -27,12 +44,30 @@ export default function NewInvoiceDetailProductForm({ form }: { form: UseFormRet
                                 <FormItem>
                                     <FormLabel>Ürün Kodu</FormLabel>
                                     <FormControl>
-                                        <Input className="max-w-[240px]" placeholder="KMD-" {...field}   value={field.value || ""}/>
+                                        <Input className="max-w-[240px]" disabled={isService} placeholder="KMD-" {...field}   value={field.value || ""}/>
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )}
                     />
+                 </div>
+
+                    <FormField
+                            control={form.control}
+                            name="isService"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Hizmet</FormLabel>
+                                    <FormControl>
+                                        <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+
+                                    </FormControl>
+                                    </FormItem>
+                            )}
+                    />
+                                    
+                    
+                 </div>
 
                 <FormField
                             control={form.control}

@@ -131,7 +131,8 @@ export default function ProjectDetailPage() {
 
     try {
       const response = await axiosInstance.get(
-        `/report/project/${projectId}`, // Backend endpoint'i
+        //`/reports/project/${projectId}`, // Backend endpoint'i
+        `/reports/project/${projectId}/kdv-iade`,
         {
           responseType: 'blob', // Yanıtın bir Blob olarak işlenmesini sağlar
           timeout: 60000, // İsteğin zaman aşımını ayarla (örneğin 60 saniye)

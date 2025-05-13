@@ -39,14 +39,18 @@ export function NewInvoiceDetailFormPage({ invoiceInfo }: { invoiceInfo: string 
 
         const [errMsg, setErrMsg] = useState<string | null>(null);
         const [successMsg, setSuccessMsg] = useState<string | null>(null);
-        const [invoiceNumber, setInvoiceNumber] = useState<string>(invoiceInfo);
-
 
   
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            invoiceNumber: invoiceNumber,
+            invoiceNumber: invoiceInfo, // invoiceInfo prop'unu doğrudan kullanın
+            // Ürün alanları için başlangıç değerleri eklendi
+            product_code: "",
+            quantity: "",
+            unitPrice: "",
+            description: "",
+            // KDV alanları
             vatRate: "18",
             vatAmount: "0.00",
             isVatExempt: false,
@@ -71,28 +75,26 @@ export function NewInvoiceDetailFormPage({ invoiceInfo }: { invoiceInfo: string 
                 console.log(response);
                 setSuccessMsg(response?.data?.id + " Numaralı Fatura Detayı Başarıyla Kaydedildi!" );
                 
+                // Formu sıfırlarken tüm alanları ve invoiceNumber'ı orijinal değeriyle ayarla
+                // setTimeout, UI güncellemelerinin (başarı mesajı gibi) ardından reset'in çalışmasını sağlar
+                setTimeout(() => {
+                    form.reset({
+                        invoiceNumber: invoiceInfo, // Fatura numarasını koru
+                        product_code: "",
+                        quantity: "",
+                        unitPrice: "",
+                        description: "",
+                        vatRate: "18",
+                        vatAmount: "0.00",
+                        isVatExempt: false,
+                        vatExemptionReason: "",
+                    });
+                }, 0);
             })
             .catch(error => {
                 setErrMsg(error.response?.data?.message || "Bir hata oluştu.");
                 setSuccessMsg(null);
-
             });
-    // Küçük bir gecikme ile resetleme
-    setTimeout(() => {
-        form.reset({
-
-        vatRate: "18",
-        vatAmount: "0.00",
-        isVatExempt: false,
-        vatExemptionReason: "",
-        
-        // Ürün alanları
-        product_code: "",
-        quantity: "",
-        unitPrice: "",
-        description: ""
-        })
-    }, 0)
 }
 
   

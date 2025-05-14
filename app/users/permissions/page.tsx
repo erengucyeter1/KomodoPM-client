@@ -21,7 +21,7 @@ interface Permission {
 export default withPermissions(PermissionsPage, ["see:permissions"]);
 
 function PermissionsPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");

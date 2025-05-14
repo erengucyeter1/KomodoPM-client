@@ -7,6 +7,8 @@ export function hasRequiredPermissions(
   const { user } = useAuth();
   const userPermissions = user?.permissions;
 
+
+
   // İzin kontrolü yoksa herkes görebilir
   if (!permissionsRequired || permissionsRequired.length === 0) {
     return true;

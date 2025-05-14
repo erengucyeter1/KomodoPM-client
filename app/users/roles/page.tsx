@@ -20,13 +20,14 @@ interface Role {
   id: string;
   name: string;
   description: string;
-  permissions?: number[];
+  permissions: Permission[];
 }
 
 interface Permission {
   id: number;
   name: string;
   description: string;
+  selectedPermissions: number[];
 }
 
 interface EditedRole extends Role {
@@ -39,7 +40,7 @@ function RolesPage() {
 
   usePermissions(['see:roles']);
 
-  const { user, loading } = useAuth(); // Admin yetkisi gerekli
+  const { user, isLoading: authLoading } = useAuth(); // Admin yetkisi gerekli
   const [roles, setRoles] = useState<Role[]>([]);
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -75,7 +76,7 @@ function RolesPage() {
   };
 
   useEffect(() => {
-    if (!loading) {
+    if (!authLoading) {
       fetchRolesAndPermissions();
       
       // Dropdown dışına tıklanınca kapanması için
@@ -90,7 +91,7 @@ function RolesPage() {
         document.removeEventListener("mousedown", handleClickOutside);
       };
     }
-  }, [loading]);
+  }, [authLoading]);
 
   const fetchRolesAndPermissions = async () => {
     try {
@@ -102,12 +103,13 @@ function RolesPage() {
         axiosInstance.get("/authorization/permissions")
       ]);
 
-      // API yanıtını normalize et
-      const normalizedRoles = Array.isArray(rolesResponse.data)
-        ? rolesResponse.data.map(normalizeRole)
-        : [];
+      // API yanıtını normalize etmeye gerek yok, roller direkt kullanılabilir.
+      // const normalizedRoles = Array.isArray(rolesResponse.data)
+      //   ? rolesResponse.data.map(normalizeRole) // normalizeRole artık kullanılmıyor
+      //   : [];
+      // setRoles(normalizedRoles);
 
-      setRoles(normalizedRoles);
+      setRoles(Array.isArray(rolesResponse.data) ? rolesResponse.data : []);
       setPermissions(permissionsResponse.data);
     } catch (error: any) {
       console.error("Error fetching data:", error);
@@ -122,13 +124,11 @@ function RolesPage() {
   };
 
   const startEditing = (role: Role) => {
-    // Role'ü normalize ederek permissions'in dizi olduğundan emin ol
-    const normalizedRole = normalizeRole(role);
-
-    setEditingRoleId(normalizedRole.id);
+    // Role.permissions artık Permission[] tipinde olduğu için ID'leri map'lememiz gerekiyor.
+    setEditingRoleId(role.id);
     setEditedRole({
-      ...normalizedRole,
-      selectedPermissions: [...(normalizedRole.permissions || [])]
+      ...role,
+      selectedPermissions: role.permissions ? role.permissions.map(p => p.id) : []
     });
     setOpenRoleId(null);
   };
@@ -178,23 +178,20 @@ function RolesPage() {
 
     try {
       // API'ye kaydetme işlemi
-      await axiosInstance.put(`/authorization/roles/${editedRole.id}`, {
+      const roleToUpdate = {
         name: editedRole.name,
         description: editedRole.description,
-        permissions: editedRole.selectedPermissions,
-      });
+        permissions: editedRole.selectedPermissions, // This is number[]
+      };
+      const response = await axiosInstance.put(`/authorization/roles/${editedRole.id}`, roleToUpdate);
+      const updatedRoleFromAPI: Role = response.data; // Backend returns the full Role object
 
       // UI'yi güncelle
-      setRoles(prevRoles => prevRoles.map(role => {
-        if (role.id === editedRole.id) {
-          return {
-            ...role,
-            name: editedRole.name,
-            description: editedRole.description,
-            permissions: editedRole.selectedPermissions
-          };
+      setRoles(prevRoles => prevRoles.map(r => {
+        if (r.id === updatedRoleFromAPI.id) {
+          return updatedRoleFromAPI; // Replace with the full updated object
         }
-        return role;
+        return r;
       }));
 
       setEditingRoleId(null);
@@ -233,16 +230,14 @@ function RolesPage() {
       const roleToAdd = {
         name: newRole.name,
         description: newRole.description,
-        permissions: newRole.selectedPermissions,
+        permissions: newRole.selectedPermissions, // This is number[]
       };
 
       const response = await axiosInstance.post("/authorization/roles", roleToAdd);
-
-      // API'den gelen yanıtı normalize et
-      const normalizedRole = normalizeRole(response.data);
+      const newRoleFromAPI: Role = response.data; // Backend returns the full Role object
 
       // API'den gelen yeni rol verisini ekle
-      setRoles(prevRoles => [...prevRoles, normalizedRole]);
+      setRoles(prevRoles => [...prevRoles, newRoleFromAPI]);
       setIsAddingRole(false);
       setNewRole({
         name: "",
@@ -275,14 +270,14 @@ function RolesPage() {
   };
 
   // İzinleri göstermek için yardımcı fonksiyon
-  const getpermissions = (role: Role): number[] => {
+  const getpermissions = (role: Role): Permission[] => {
     if (Array.isArray(role.permissions) && role.permissions.length > 0) {
       return role.permissions;
     }
     return [];
   };
 
-  if (loading || isLoading) {
+  if (authLoading || isLoading) {
     return <Loading text="Roller ve izinler yükleniyor..." />;
   }
 
@@ -439,13 +434,12 @@ function RolesPage() {
                   </td>
                   <td className="py-3 px-4">
                     {editingRoleId === role.id && editedRole ? (
-                      <TextInput
+                      <textarea
                         id={`edit-role-desc-${role.id}`}
-                        name="description"
-                        label=""
                         value={editedRole.description}
-                        onChange={(e) => setEditedRole({ ...editedRole, description: e.target.value })}
-                        className="mb-0"
+                        onChange={(e) => setEditedRole(prev => prev ? { ...prev, description: e.target.value } : null)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#da8e0a] focus:border-transparent"
+                        rows={1}
                       />
                     ) : (
                       role.description
@@ -497,13 +491,12 @@ function RolesPage() {
                       </div>
                     ) : (
                       <div>
-                        {getpermissions(role).length > 0 ? (
+                        {role.permissions && role.permissions.length > 0 ? (
                           <div className="flex flex-wrap gap-1">
-                            {getpermissions(role).map(id => {
-                              const permission = permissions.find(p => p.id === id);
+                            {role.permissions.map(permission => {
                               return permission ? (
                                 <span
-                                  key={`role-${role.id}-perm-${id}`}
+                                  key={`role-${role.id}-perm-${permission.id}`}
                                   className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full text-xs"
                                 >
                                   {permission.name}

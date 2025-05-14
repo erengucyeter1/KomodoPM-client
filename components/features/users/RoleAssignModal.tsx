@@ -88,7 +88,7 @@ export default function RoleAssignModal({
       const roleIds = response.data.roles || [];
       
       // Number tipindeki ID'leri string'e dönüştür
-      const roleIdsAsStrings = roleIds.map(id => id.toString());
+      const roleIdsAsStrings = roleIds.map((id:number) => id.toString());
       
       setUserRoles(roleIdsAsStrings);
       setSelectedRoles(roleIdsAsStrings);

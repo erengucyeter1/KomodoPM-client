@@ -26,7 +26,7 @@ export default withPermissions(UserDetailPage, ["see:user_details"]);
 function UserDetailPage() {
   const { id } = useParams();
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -98,6 +98,7 @@ function UserDetailPage() {
     return (
       <PermissionsCard title="Kullanıcı Düzenle">
         <UserForm 
+          permissionsRequired={['update:user']}
           initialData={currentUser} 
           isEditing={true} 
           onSuccess={() => {

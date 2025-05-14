@@ -2,15 +2,11 @@
 
 import { usePathname } from "next/navigation";
 import UsersSidebar from "@/components/layout/UsersSidebar";
+import { withPermissions } from "../../hoc/withPermissions";
 
-import {forbiddenWarning} from "@/lib/permissions/messageComponents";
-import {hasRequiredPermissions} from "@/lib/permissions/utils";
+export default withPermissions(UsersLayout, ["see:users"]);
 
-export default function UsersLayout({ children }) {
-
-  if (!hasRequiredPermissions(['see:users'])) {
-    return forbiddenWarning();
-  }
+function UsersLayout({ children }) {
 
   const pathname = usePathname();
   

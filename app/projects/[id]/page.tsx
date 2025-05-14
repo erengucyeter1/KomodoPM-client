@@ -10,11 +10,33 @@ import Loading from "@/components/ui/feedback/Loading";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import Link from "next/link";
-import { Download } from "lucide-react"; // Yeni ikon için import
+import { Download, Edit } from "lucide-react"; // Yeni ikon için import
 import InfoIcon from "@/components/ui/info/infoIcon";
 import {useAuth} from "@/hooks/useAuth"
 import { withPermissions } from "@/hoc/withPermissions";
 import { User } from "@/types/UserInterface";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose, // If needed for manual close button
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input"; // Assuming you have this
+import { Label } from "@/components/ui/label"; // Assuming you have this
+import { Button } from "@/components/ui/button";
 
 // Type definitions
 interface TrailerType {
@@ -31,13 +53,24 @@ interface ExpenseAllocationType {
   description?: string;
 }
 
+interface Product {
+  id: string;
+  name: string;
+  balance: string;
+  created_at: string;
+  measurement_unit: string;
+  stock_code: string;
+  description: string;
+  unit_weight: string;
+  isService: boolean;
+}
+
 interface ProjectExpense {
-  
   id: string;
   user: User;
   amount: number;
-  product_code?: string;
-  quantity?: number;
+  product_code: string;
+  quantity: string;
   description?: string;
   created_at: string;
   creator_id: string;
@@ -45,6 +78,7 @@ interface ProjectExpense {
   project_id: string;
   creator?: User;
   expense_allocation_type?: ExpenseAllocationType;
+  product?: Product;
 }
 
 interface Project {
@@ -69,7 +103,7 @@ interface Project {
 export default withPermissions(ProjectDetailPage, ["see:projectDetail"]);
 
 function ProjectDetailPage() {
-  const { user} = useAuth();
+  const { user: activeUser } = useAuth();
   const params = useParams();
   const router = useRouter();
   const projectId = params.id as string;
@@ -78,7 +112,17 @@ function ProjectDetailPage() {
   const [projectExpenses, setProjectExpenses] = useState<ProjectExpense[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
-  const [isDownloadingReport, setIsDownloadingReport] = useState(false); // Rapor indirme durumu için state
+  const [isDownloadingReport, setIsDownloadingReport] = useState(false);
+
+  // State for the edit/delete modal
+  const [selectedExpenseForEdit, setSelectedExpenseForEdit] = useState<ProjectExpense | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editedQuantity, setEditedQuantity] = useState<string>("");
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  
+  // State for rank warning
+  const [showRankWarningModal, setShowRankWarningModal] = useState(false);
+  const [rankWarningMessage, setRankWarningMessage] = useState("");
 
   // Helper function to format status
   const getStatusInfo = (status: string) => {
@@ -116,8 +160,17 @@ function ProjectDetailPage() {
   useEffect(() => {
     const fetchExpenses = async () => {
       try {
-        const response = await axiosInstance.get(`/project-expense/project/${projectId}`);
-        setProjectExpenses(response.data);
+        const response = await axiosInstance.get<ProjectExpense[]>(`/project-expense/project/${projectId}`);
+        // Ensure fetched expenses conform to ProjectExpense with string quantity/balance
+        const expensesWithStringNumerics = response.data.map(exp => ({
+          ...exp,
+          quantity: String(exp.quantity),
+          product: exp.product ? {
+            ...exp.product,
+            balance: String(exp.product.balance)
+          } : undefined
+        }));
+        setProjectExpenses(expensesWithStringNumerics);
       } catch (err: any) {
         console.error("Giderler alınırken hata:", err);
       }
@@ -215,7 +268,114 @@ function ProjectDetailPage() {
     }
   };
 
-  if (isLoading) {
+  const handleOpenExpenseModal = async (expenseId: string) => {
+    try {
+      setIsLoading(true); 
+      setError("");
+      const response = await axiosInstance.get<ProjectExpense>(`/project-expense/${expenseId}`);
+      const fetchedExpense = response.data;
+      console.log("Fetched Expense for Edit:", fetchedExpense);
+
+      if (!fetchedExpense) {
+        setError("Düzenlenecek gider bulunamadı.");
+        setIsLoading(false);
+        return;
+      }
+      
+      // Ensure string types for quantity and balance before setting state
+      const processedExpense: ProjectExpense = {
+          ...fetchedExpense,
+          quantity: String(fetchedExpense.quantity ?? "0"), 
+          product: fetchedExpense.product ? {
+              ...fetchedExpense.product,
+              balance: String(fetchedExpense.product.balance ?? "0") 
+          } : undefined,
+      };
+      setSelectedExpenseForEdit(processedExpense);
+
+      if (!activeUser || typeof activeUser.authorization_rank !== 'number') {
+        setError("İşlem için kullanıcı yetkisi doğrulanamadı.");
+        setIsLoading(false);
+        return;
+      }
+
+      // Use processedExpense.user for rank check
+      if (processedExpense.user && typeof processedExpense.user.authorization_rank === 'number') {
+        if (processedExpense.user.authorization_rank > activeUser.authorization_rank) {
+          setRankWarningMessage(
+            `Bu gider ${processedExpense.user.name || 'bir kullanıcı'} (${processedExpense.user.username}) tarafından gerçekleştirilmiş. Yapacağınız işlem gerçekleşmeden önce bu kişinin onayına gidecektir.`
+          );
+          setShowRankWarningModal(true);
+          setIsLoading(false);
+          return; 
+        }
+      } else {
+        console.warn("Gideri oluşturan kullanıcı veya yetki bilgisi eksik. Düzenlemeye izin veriliyor.", processedExpense);
+      }
+
+      setEditedQuantity(processedExpense.quantity); // quantity is now definitely string
+      setIsEditModalOpen(true);
+      setShowRankWarningModal(false); // Ensure rank warning is hidden if we proceed
+      
+    } catch (err: any) {
+      console.error("Error fetching expense for edit:", err);
+      setError(err.response?.data?.message || "Gider bilgileri yüklenirken bir hata oluştu.");
+    } finally {
+        setIsLoading(false);
+    }
+  };
+  
+  const closeEditModal = () => {
+    setIsEditModalOpen(false);
+    setSelectedExpenseForEdit(null);
+    setEditedQuantity("");
+  };
+
+  const handleSaveQuantity = async () => {
+    if (!selectedExpenseForEdit || editedQuantity === "") return;
+    
+    const newQuantityNum = parseFloat(editedQuantity);
+    if (isNaN(newQuantityNum) || newQuantityNum < 0) {
+      setError("Geçerli bir miktar giriniz.");
+      return;
+    }
+    
+    const originalQuantityNum = selectedExpenseForEdit.quantity ? parseFloat(selectedExpenseForEdit.quantity) : 0;
+    const productOriginalBalanceNum = selectedExpenseForEdit.product?.balance ? parseFloat(selectedExpenseForEdit.product.balance) : 0;
+    const maxAllowedQuantity = productOriginalBalanceNum + originalQuantityNum;
+
+    if (newQuantityNum > maxAllowedQuantity) {
+      setError(`Miktar, (stok: ${productOriginalBalanceNum} + eski gider: ${originalQuantityNum}) = ${maxAllowedQuantity} ${selectedExpenseForEdit.product?.measurement_unit || ''} değerinden fazla olamaz.`);
+      return;
+    }
+
+    console.log(`Saving new quantity for expense ${selectedExpenseForEdit.id}: ${newQuantityNum}`);
+    alert(`Placeholder: Miktar güncellenecek: ${newQuantityNum}. Backend entegrasyonu yapılacak.`);
+    
+    const updatedExpenseList = projectExpenses.map(exp =>
+      exp.id === selectedExpenseForEdit.id ? { ...exp, quantity: newQuantityNum.toString() } : exp
+    );
+    setProjectExpenses(updatedExpenseList);
+    
+    setSelectedExpenseForEdit(prev => prev ? { ...prev, quantity: newQuantityNum.toString() } : null);
+    closeEditModal();
+  };
+
+  const openDeleteConfirmation = () => {
+    if (!selectedExpenseForEdit) return;
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!selectedExpenseForEdit) return;
+    console.log(`Deleting expense ${selectedExpenseForEdit.id}`);
+    alert(`Placeholder: Gider silinecek: ${selectedExpenseForEdit.id}. Backend entegrasyonu yapılacak.`);
+    setProjectExpenses(prev => prev.filter(exp => exp.id !== selectedExpenseForEdit.id));
+    setIsDeleteDialogOpen(false);
+    closeEditModal(); 
+  };
+
+  if (isLoading && !project) { // Show loading only if project is not yet fetched
     return (
       <div className="flex justify-center items-center h-64">
         <Loading text="Proje bilgileri yükleniyor..." />
@@ -223,7 +383,7 @@ function ProjectDetailPage() {
     );
   }
 
-  if (error) {
+  if (error && !project) { // Show error only if project couldn't be fetched
     return <Alert type="error" message={error} />;
   }
 
@@ -235,12 +395,17 @@ function ProjectDetailPage() {
   const completionPercentage =
     project.budget > 0 ? Math.min(100, Math.round((project.total_expenses / project.budget) * 100)) : 0;
 
-
   const handleCompleteProject = async () => {
-    await axiosInstance.put(`/projects/${projectId}/complete`);
-    router.refresh();
+    try {
+        setError("");
+        await axiosInstance.put(`/projects/${projectId}/complete`);
+        // Optimistically update project status or re-fetch
+        setProject(prev => prev ? { ...prev, status: 'completed' } : null);
+        // router.refresh(); // Or fetchProject() again
+    } catch (err:any) {
+        setError(err.response?.data?.message || "Proje tamamlanırken bir hata oluştu.");
+    }
   };
-
 
   return (
     <div className="space-y-8">
@@ -452,12 +617,14 @@ function ProjectDetailPage() {
 
       {/* Project Expenses Section */}
       <PermissionsCard>
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold">Proje Giderleri</h2>
-          <Link href={`/projects/${projectId}/newExpense`}>
+        {project.status !== "completed" && (
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-bold">Proje Giderleri</h2>
+            <Link href={`/projects/${projectId}/newExpense`}>
             <PermissionButton  permissionsRequired={["create:projectExpense"]} startIcon={<span>+</span>}>Yeni Gider Ekle</PermissionButton>
           </Link>
         </div>
+        )}
         {projectExpenses.length === 0 ? (
           <div className="text-center py-10">
             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -480,11 +647,23 @@ function ProjectDetailPage() {
                     Ürün Kodu
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Açıklama
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Miktar
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Birim
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Eklenme Tarihi
                   </th>
+                  {/* Add Actions header if project is not completed */}
+                  {project && project.status !== "completed" && project.status !== "canceled" && (
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      İşlemler
+                    </th>
+                  )}
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -500,8 +679,16 @@ function ProjectDetailPage() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">{expense.product_code || "-"}</div>
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap max-w-xs truncate">
+                      <div className="text-sm text-gray-900" title={expense.product?.description}>
+                        {expense.product?.description || expense.description || "-"}
+                      </div>
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">{expense.quantity || "-"}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{expense.product?.measurement_unit || "-"}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-500">
@@ -510,6 +697,19 @@ function ProjectDetailPage() {
                           : "-"}
                       </div>
                     </td>
+                    {/* Add Edit button cell if project is not completed */}
+                    {project && project.status !== "completed" && project.status !== "canceled" && (
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <PermissionButton 
+                          permissionsRequired={["update:projectExpense"]} 
+                          variant="secondary" 
+                          size="sm" 
+                          onClick={() => handleOpenExpenseModal(expense.id)}
+                        >
+                          <Edit size={16} className="mr-1" /> Düzenle
+                        </PermissionButton>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -517,6 +717,96 @@ function ProjectDetailPage() {
           </div>
         )}
       </PermissionsCard>
+
+      {/* Edit Expense Modal */}
+      <Dialog open={isEditModalOpen} onOpenChange={(isOpen) => { if (!isOpen) closeEditModal(); else setIsEditModalOpen(true);}}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Gider Miktarını Düzenle</DialogTitle>
+            {selectedExpenseForEdit && (
+              <DialogDescription>
+                Ürün: {selectedExpenseForEdit.product?.description || selectedExpenseForEdit.product_code || 'Detay Yok'}
+                <br/>
+                Mevcut Miktar: {selectedExpenseForEdit.quantity || "0"} {selectedExpenseForEdit.product?.measurement_unit}
+                <br/>
+                Stoktaki Bakiye (Bu Gider Hariç): {selectedExpenseForEdit.product?.balance || "0"} {selectedExpenseForEdit.product?.measurement_unit}
+              </DialogDescription>
+            )}
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="quantityInput" className="text-right col-span-1">
+                Yeni Miktar ({selectedExpenseForEdit?.product?.measurement_unit || ''})
+              </Label>
+              <Input
+                id="quantityInput"
+                type="number"
+                min={0}
+                max={
+                  selectedExpenseForEdit?.product?.balance && selectedExpenseForEdit?.quantity
+                    ? parseFloat(selectedExpenseForEdit.product.balance) + parseFloat(selectedExpenseForEdit.quantity)
+                    : undefined // Set to undefined if values are not available, or a sensible default like 0
+                }
+                value={editedQuantity}
+                onChange={(e) => setEditedQuantity(e.target.value)}
+                className="col-span-3"
+                placeholder="Yeni miktar"
+              />
+            </div>
+          </div>
+          <DialogFooter className="sm:justify-between">
+            <Button variant="destructive" onClick={openDeleteConfirmation}>
+              Gideri Sil
+            </Button>
+            <div className="flex gap-2">
+              <DialogClose asChild>
+                <Button type="button" variant="outline" onClick={closeEditModal}>
+                  İptal
+                </Button>
+              </DialogClose>
+              <Button type="button" onClick={handleSaveQuantity}> 
+                Kaydet
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Gideri Silmek İstediğinize Emin Misiniz?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bu işlem geri alınamaz. Bu gider projenizden kalıcı olarak silinecektir.
+              {selectedExpenseForEdit && (
+                <p className="mt-2">Silinecek Gider: {selectedExpenseForEdit.product?.description || selectedExpenseForEdit.product_code || 'Detay Yok'} ({selectedExpenseForEdit.quantity} {selectedExpenseForEdit.product?.measurement_unit})</p>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setIsDeleteDialogOpen(false)}>İptal</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDelete} className="bg-red-600 hover:bg-red-700">
+              Evet, Sil
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
+      {/* Rank Warning Modal/Alert Dialog */}
+      <AlertDialog open={showRankWarningModal} onOpenChange={setShowRankWarningModal}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Onay Gerekiyor</AlertDialogTitle>
+            <AlertDialogDescription>
+              {rankWarningMessage}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowRankWarningModal(false)}>Anladım</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

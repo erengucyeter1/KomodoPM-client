@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axios from '../../utils/axios';
 import {
   useReactTable,
@@ -10,6 +10,10 @@ import {
   getFilteredRowModel,
   createColumnHelper,
   flexRender,
+  ColumnDef,
+  SortingState,
+  ColumnFiltersState,
+  RowData,
 } from '@tanstack/react-table';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,13 +29,31 @@ import Papa from 'papaparse';
 import { withPermissions } from "@/hoc/withPermissions";
 import PermissionsCard from "@/components/ui/card/Card";
 
+declare module '@tanstack/react-table' {
+  interface TableMeta<TData extends RowData> {
+    updateData: (rowIndex: number, columnId: string, value: unknown) => void;
+  }
+}
+
+interface StockItem {
+  id?: number;
+  stock_code: string;
+  measurement_unit: string;
+  description: string;
+  balance?: number;
+}
+
+interface CsvStockItem {
+  stockCode: string;
+  description: string;
+  mesurementUnit: string;
+}
 
 export default withPermissions(StockPage, ["see:stock"]);
 
-
 function StockPage() {
 
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<StockItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [generatingQr, setGeneratingQr] = useState(false);
  
@@ -39,10 +61,10 @@ function StockPage() {
     pageIndex: 0,
     pageSize: 25,
   });
-  const [sorting, setSorting] = useState([]);
+  const [sorting, setSorting] = useState<SortingState>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [globalFilter, setGlobalFilter] = useState('');
-  const [columnFilters, setColumnFilters] = useState([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
   const [uploadProgress, setUploadProgress] = useState(0);
   const [stockCode, setStockCode] = useState('');
@@ -51,14 +73,10 @@ function StockPage() {
   const [successMessage, setSuccessMessage] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [uploadingCsv, setUploadingCsv] = useState(false);
-  const fileInputRef = useRef(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-
-
-  // ...column helper ve columns tanımları aynen korunuyor
-
-  const columnHelper = createColumnHelper();
-  const columns = [
+  const columnHelper = createColumnHelper<StockItem>();
+  const columns: ColumnDef<StockItem, any>[] = [
     columnHelper.accessor('stock_code', {
       header: 'Stok Kodu',
       cell: info => info.getValue(),
@@ -86,7 +104,7 @@ function StockPage() {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => generateQrCode(props.row.original.stock_code,props.row.original.measurement_unit)}
+          onClick={() => generateQrCode(props.row.original.stock_code, props.row.original.measurement_unit)}
           disabled={generatingQr}
           className="flex items-center"
         >
@@ -101,7 +119,6 @@ function StockPage() {
   ];
 
   const table = useReactTable({
-    // ...table ayarları aynen korunuyor
     data,
     columns,
     state: {
@@ -124,12 +141,7 @@ function StockPage() {
     manualFiltering: true,
   });
 
-  useEffect(() => {
-    fetchStocks();
-  }, [pagination.pageIndex, pagination.pageSize, sorting, globalFilter]);
-
-  const fetchStocks = async () => {
-    // ...fetchStocks fonksiyonu aynen korunuyor
+  const fetchStocks = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams();
@@ -144,7 +156,7 @@ function StockPage() {
       }
       params.append("isServiceOnly", "false");
       params.append("balanceGreaterThan", "0");
-      const response = await axios.get(`/stock?${params.toString()}`);
+      const response = await axios.get<{items: StockItem[], meta: {totalItems: number}}>(`/stock?${params.toString()}`);
       setData(response.data.items);
       setTotalCount(response.data.meta.totalItems);
       setLoading(false);
@@ -153,11 +165,13 @@ function StockPage() {
       setError('Stok öğeleri yüklenirken bir hata oluştu.');
       setLoading(false);
     }
-  };
+  }, [pagination.pageIndex, pagination.pageSize, sorting, globalFilter]);
 
+  useEffect(() => {
+    fetchStocks();
+  }, [fetchStocks]);
 
-  const generateQrCode = async (stockCode, mesurementUnit) => {
-    // ...generateQrCode fonksiyonu aynen korunuyor
+  const generateQrCode = async (stockCode: string, mesurementUnit: string) => {
     try {
       setGeneratingQr(true);
       const response = await axios.post('/qrcode', 
@@ -183,17 +197,17 @@ function StockPage() {
       setGeneratingQr(false);
       setSuccessMessage('QR kod başarıyla indirildi!');
       setTimeout(() => setSuccessMessage(''), 3000);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error generating QR code:', err);
-      setError('QR kod oluşturulurken bir hata oluştu.');
+      const message = err instanceof Error ? err.message : String(err);
+      setError(message || 'QR kod oluşturulurken bir hata oluştu.');
       setTimeout(() => setError(null), 3000);
       setGeneratingQr(false);
     }
   };
 
     
-  const handleSubmit = async (e) => {
-    // ...handleSubmit fonksiyonu aynen korunuyor
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
       await axios.post('/stock', {
@@ -208,18 +222,16 @@ function StockPage() {
       setTimeout(() => setSuccessMessage(''), 3000);
       fetchStocks();
 
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error creating stock item:', err);
-      setError('Stok öğesi eklenirken bir hata oluştu.');
+      const message = err instanceof Error ? err.message : String(err);
+      setError(message || 'Stok öğesi eklenirken bir hata oluştu.');
       setTimeout(() => setError(null), 3000);
     }
   };
 
-
-   // CSV yükleme fonksiyonu
-  // CSV yükleme fonksiyonu
-const handleCsvUpload = (event) => {
-    const file = event.target.files[0];
+  const handleCsvUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
     if (!file) return;
   
     if (file.type !== 'text/csv' && !file.name.endsWith('.csv')) {
@@ -231,30 +243,28 @@ const handleCsvUpload = (event) => {
     setUploadingCsv(true);
     setUploadProgress(10);
     
-    Papa.parse(file, {
-      delimiter: ";", // Ayraç olarak ; kullanılıyor
-      header: false,  // Başlık satırı var
-      skipEmptyLines: true, // Boş satırları atla
+    Papa.parse<string[]>(file, {
+      delimiter: ";",
+      header: false,
+      skipEmptyLines: true,
       complete: async (results) => {
         try {
           setUploadProgress(30);
           
-          // İlk satır başlık olduğu için atlayalım (varsa)
-          const dataRows = results.data.length > 0 && 
-            results.data[0][0] === 'STKKOD' ? 
+          const dataRows: string[][] = results.data.length > 0 && 
+            Array.isArray(results.data[0]) && results.data[0][0] === 'STKKOD' ?
             results.data.slice(1) : results.data;
           
-          // CSV verisini işle
-          const stockItems = dataRows
-            .filter(row => row.length >= 3) // En az 3 sütun içeren satırları al
+          const stockItems: CsvStockItem[] = dataRows
+            .filter(row => Array.isArray(row) && row.length >= 3 && row.every(cell => typeof cell === 'string'))
             .map(row => {
               return {
-                stockCode: row[0]?.trim(), // Boşlukları temizle
-                description: row[1]?.trim(),
-                mesurementUnit: row[2]?.trim()
+                stockCode: row[0]?.trim() || '', 
+                description: row[1]?.trim() || '',
+                mesurementUnit: row[2]?.trim() || '' 
               };
             })
-            .filter(item => item.stockCode && item.description && item.mesurementUnit); // Tüm alanların dolu olduğu kayıtları al
+            .filter(item => item.stockCode && item.description && item.mesurementUnit);
           
           setUploadProgress(50);
           
@@ -264,32 +274,29 @@ const handleCsvUpload = (event) => {
             return;
           }
   
-          // API isteği için veri yapısını kontrol et
           console.log('Gönderilecek veriler:', stockItems);
   
-          // Bulk API'ye gönder
-          const response = await axios.post('/stock/bulk', stockItems);
+          const response = await axios.post<{length: number}>('/stock/bulk', stockItems);
           
           setUploadProgress(100);
           setSuccessMessage(`${response.data.length} adet stok başarıyla eklendi!`);
           setTimeout(() => setSuccessMessage(''), 3000);
           
-          // Tabloyu yenile
           fetchStocks();
           
-          // Dosya seçiciyi sıfırla
           if (fileInputRef.current) {
             fileInputRef.current.value = '';
           }
-        } catch (error) {
+        } catch (error: any) { 
           console.error('CSV yükleme hatası:', error);
-          setError(`Stok ekleme sırasında bir hata oluştu: ${error.message}`);
+          const message = error instanceof Error ? error.message : String(error);
+          setError(`Stok ekleme sırasında bir hata oluştu: ${message}`);
           setTimeout(() => setError(null), 3000);
         } finally {
           setUploadingCsv(false);
         }
       },
-      error: (error) => {
+      error: (error: Error) => {
         console.error('CSV okuma hatası:', error);
         setError(`CSV okuma hatası: ${error.message}`);
         setTimeout(() => setError(null), 3000);
@@ -297,8 +304,6 @@ const handleCsvUpload = (event) => {
       }
     });
   };
-
- 
 
   return (
     <div className="container mx-auto p-6">
@@ -416,7 +421,6 @@ const handleCsvUpload = (event) => {
       </PermissionsCard>
       
       
-      {/* Stok Listesi bölümü aynen korunuyor */}
       <div className="bg-white shadow-md rounded px-8 pt-6 pb-8">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-semibold">Stok Listesi</h2>

@@ -1,149 +1,116 @@
 "use client";
 
-import { useState, useEffect, createContext, useContext } from 'react';
+import { useState, useEffect, useCallback, useContext } from 'react';
 import { useRouter } from 'next/navigation';
 import axiosInstance from '@/utils/axios';
 import { User } from '@/types/UserInterface';
-
-interface AuthContextType {
-  user: User | null;
-  loading: boolean;
-  login: (username: string, password: string) => Promise<boolean>;
-  logout: () => void;
-  hasPermission: (permissionId: string) => boolean;
-}
-
-// Context'i doğru tip ile oluşturun
-const AuthContext = createContext<AuthContextType | null>(null);
-
+import { AuthContext, AuthContextType } from '@/context/AuthContext';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  // Load user from localStorage on initial mount
-  useEffect(() => {
-    const loadUser = () => {
-      const token = localStorage.getItem('token');
-
-      if (!token) {
-        setUser(null);
-        setLoading(false);
-        return;
-      }
-
-      if (token) {
-        try {
-          const parsedToken = parseJwt(token);
-          setUser(parsedToken.user);
-        } catch (error) {
-          console.error('Error parsing user info:', error);
-          localStorage.removeItem('token');
-        }
-      }
-      
-      setLoading(false);
-    };
-
-    loadUser();
-  }, []);
-
-  function parseJwt(token: string) {
+  const parseJwt = useCallback((token: string): any | null => {
     try {
-      // JWT'nin payload kısmını al
       const base64Url = token.split('.')[1];
-      
-      // Base64 URL karakter düzeltmeleri
       const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      
-      // Base64'ü çözümle (UTF-8 desteği ile)
       const jsonPayload = decodeURIComponent(
         atob(base64)
           .split('')
-          .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
           .join('')
       );
-      
       return JSON.parse(jsonPayload);
-    } catch (error) {
-      console.error('JWT parsing error:', error);
+    } catch (e) {
+      console.error("Token parse edilirken hata:", e);
       return null;
     }
-  }
-  
-  // Login function
-  const login = async (username: string, password: string) => {
+  }, []);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      const decoded = parseJwt(token);
+      if (decoded && typeof decoded.user === 'object' && decoded.user !== null) {
+        setUser(decoded.user as User);
+      } else {
+        console.error("Token'dan kullanıcı bilgisi okunamadı veya format hatalı.");
+        localStorage.removeItem('token');
+      }
+    }
+    setLoading(false);
+  }, [parseJwt]);
+
+  const login = useCallback(async (usernameOrEmail: string, password_hash: string): Promise<boolean> => {
+    setLoading(true);
     try {
-      
-      const response = await axiosInstance.post('/auth/login', { username, password });
-
-      console.log('status:', response.status);
-      console.log('Login response:', response);
-
-      
+      const response = await axiosInstance.post('/auth/login', { username: usernameOrEmail, password: password_hash });
       if (response.data && response.data.accessToken) {
         const token = response.data.accessToken;
         localStorage.setItem('token', token);
-
-        const parsedToken =  parseJwt(token);
-        setUser(parsedToken.user);
-        return true;
+        const decoded = parseJwt(token);
+        if (decoded && typeof decoded.user === 'object' && decoded.user !== null) {
+          setUser(decoded.user as User);
+          setLoading(false);
+          return true;
+        } else {
+          localStorage.removeItem('token');
+          setUser(null);
+        }
       }
+      setLoading(false);
       return false;
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('Giriş hatası AuthProvider içinde:', error);
+      localStorage.removeItem('token');
+      setUser(null);
+      setLoading(false);
       return false;
     }
-  };
+  }, [parseJwt, router]);
 
-  // Logout function
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem('token');
     setUser(null);
     router.push('/auth/login');
-  };
+  }, [router]);
 
-  // Check if user has a specific permission
-  const hasPermission = (permissionId: string) => {
+  const hasPermission = useCallback((permissionId: string): boolean => {
     if (!user) return false;
-    // Check both permissions and authorization_ids for backward compatibility
-    const userPermissions = user.permissions || user.authorization_ids || [];
+    const userPermissions = user.permissions || (user as any).authorization_ids || [];
     return userPermissions.includes(permissionId);
-  };
+  }, [user]);
 
+  const contextValue: AuthContextType = {
+    user,
+    loading,
+    login,
+    logout,
+    hasPermission,
+  };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      loading, 
-      login, 
-      logout, 
-      hasPermission, 
-    }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
 }
 
-export function getToken(){
+export function getToken() {
   if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('token');
-  return token ? token : null;
-  } 
-  return null;  
+    return localStorage.getItem('token');
+  }
+  return null;
 }
 
-// Hook to use auth context
 export function useAuth(adminRequired = false) {
   const context = useContext(AuthContext);
   const router = useRouter();
-  
+
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
-  
-  const { user, loading } = context;
 
   return context;
 }

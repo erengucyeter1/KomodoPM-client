@@ -1,5 +1,5 @@
 import "./globals.css";
-import { AuthProvider } from "@/hooks/useAuth";
+import { AuthProvider } from "@/hooks/useAuthProvider";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 
 

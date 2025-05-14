@@ -9,6 +9,7 @@ import DataTable from "@/components/ui/table/DataTable";
 import Alert from "@/components/ui/feedback/Alert";
 import Loading from "@/components/ui/feedback/Loading";
 import { Input } from "@/components/ui/input";
+import { withPermissions } from "@/hoc/withPermissions";
 
 interface Partner {
   id: number;
@@ -18,7 +19,9 @@ interface Partner {
   countryCode?: string;
 }
 
-export default function PartnersPage() {
+export default withPermissions(PartnersPage, ['see:partners']);
+
+function PartnersPage() {
   const router = useRouter();
   const [partners, setPartners] = useState<Partner[]>([]);
   const [loading, setLoading] = useState(true);

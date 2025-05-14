@@ -20,7 +20,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import Alert from "@/components/ui/feedback/Alert";
-
+import { withPermissions } from "@/hoc/withPermissions";
 const formSchema = z.object({
   title: z.string().min(1, { message: "Unvan alanı zorunludur." }),
   taxOffice: z.string().optional(),
@@ -34,7 +34,9 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-export default function NewPartnerPage() {
+export default withPermissions(NewPartnerPage, ['create:partner']);
+
+function NewPartnerPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

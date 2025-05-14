@@ -1,8 +1,11 @@
 "use client";
 import { NewInvoiceDetailFormPage } from "@/components/features/invoice/fields/newInvoiceDetailFormPage";
 import { useParams } from "next/navigation";
+import { withPermissions } from '@/hoc/withPermissions';
 
-export default function InvoicePage() {
+export default withPermissions(InvoicePage, ['create:invoice']);
+
+ function InvoicePage() {
 
   const params = useParams();
   const invoiceId = params.id as string;

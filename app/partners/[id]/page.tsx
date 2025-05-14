@@ -19,6 +19,7 @@ import {
   FormMessage
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { withPermissions } from "@/hoc/withPermissions";
 
 interface Partner {
   id: number;
@@ -34,7 +35,9 @@ interface Partner {
   updatedAt: string;
 }
 
-export default function PartnerDetailPage() {
+export default withPermissions(PartnerDetailPage, ['see:partner']);
+
+function PartnerDetailPage() {
   const { id } = useParams();
   const router = useRouter();
   const [partner, setPartner] = useState<Partner | null>(null);
@@ -123,12 +126,14 @@ export default function PartnerDetailPage() {
         actions={
           <div className="flex space-x-2">
             <PermissionButton
+              permissionsRequired={['update:partner']}
               variant="secondary"
               onClick={() => setIsEditMode(true)}
             >
               Düzenle
             </PermissionButton>
             <PermissionButton
+              permissionsRequired={['delete:partner']}
               variant="danger"
               onClick={handleDelete}
             >

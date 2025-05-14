@@ -194,10 +194,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div className="py-4">
               <ul className="space-y-1">
                 {menuItems.map((item) => {
-                  // Check if user has required permission to see this menu item
-                  if (item.requiredPermission && user?.authorization_rank < item.requiredPermission) {
-                    return null; // Don't render this menu item
-                  }
+                 
 
                   if (!isMounted) {
                     return null; // Sunucuda veya ilk client render'da (hydration öncesi)
@@ -209,7 +206,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     <li key={item.path}>
                       <PermissionLink
                         permissionsRequired={item.permissions}
-                        userPermissions={user?.permissions}
                         href={item.path}
                         className={`flex items-center py-3 px-4 ${
                           isActive

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import TextInput from "@/components/ui/form/TextInput";
-import Button from "@/components/ui/button/Button";
+import PermissionButton from "@/components/ui/button/Button";
 import Alert from "@/components/ui/feedback/Alert";
 
 export default function LoginForm() {
@@ -67,9 +67,9 @@ export default function LoginForm() {
         required
       />
 
-      <Button type="submit" isLoading={loading} className="w-full">
+      <PermissionButton type="submit" isLoading={loading} className="w-full">
         Giriş Yap
-      </Button>
+      </PermissionButton>
     </form>
   );
 }

@@ -5,6 +5,8 @@ import MessageItem from './MessageItem';
 import MessageTypeSelector from './MessageTypeSelector';
 import PermissionRequestForm from './PermissionRequestForm';
 import PermissionRequestMessage from './PermissionRequestMessage';
+import PermissionButton from "@/components/ui/button/Button";
+
 
 interface ChatPanelProps {
   user: any;
@@ -143,13 +145,14 @@ export default function ChatPanel({
           onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
           disabled={!isConnected}
         />
-        <button
+        <PermissionButton
           onClick={handleSendMessage}
           disabled={!isConnected || !newMessage.trim()}
           className="ml-2 px-4 py-2 bg-[#063554] hover:bg-[#052a43] text-white rounded-md disabled:bg-gray-400"
+          permissionsRequired={['send:message']}
         >
           Gönder
-        </button>
+        </PermissionButton>
       </div>
     </div>
   );

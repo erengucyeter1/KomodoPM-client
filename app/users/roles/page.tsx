@@ -8,11 +8,11 @@ import { useState, useEffect, useRef } from "react";
 import axiosInstance from "@/utils/axios";
 import { useAuth } from "@/hooks/useAuth";
 import Card from "@/components/ui/card/Card";
-import Button from "@/components/ui/button/Button";
+import PermissionButton from "@/components/ui/button/Button";
 import Alert from "@/components/ui/feedback/Alert";
 import Loading from "@/components/ui/feedback/Loading";
 import TextInput from "@/components/ui/form/TextInput";
-import PermissionSelector from "@/components/features/permissions/PermissionSelector";
+import {usePermissions} from "@/hooks/usePermissions";
 
 // Tip tanımlamaları
 interface Role {
@@ -33,6 +33,9 @@ interface EditedRole extends Role {
 }
 
 export default function RolesPage() {
+
+  usePermissions(['see:roles']);
+
   const { user, loading } = useAuth(); // Admin yetkisi gerekli
   const [roles, setRoles] = useState<Role[]>([]);
   const [permissions, setPermissions] = useState<Permission[]>([]);
@@ -284,14 +287,13 @@ export default function RolesPage() {
     <Card 
       title="Kullanıcı Rolleri" 
       actions={
-        <Button 
+        <PermissionButton 
           onClick={handleAddRole}
           startIcon="+"
           permissionsRequired= {['add:role']}
-          userPermissions = {user?.permissions}
         >
           Yeni Rol Ekle
-        </Button>
+        </PermissionButton>
       }
     >
       {error && (
@@ -378,17 +380,17 @@ export default function RolesPage() {
             </div>
 
             <div className="flex justify-end space-x-2">
-              <Button
+              <PermissionButton
                 variant="secondary"
                 onClick={cancelAddRole}
               >
                 İptal
-              </Button>
-              <Button
+              </PermissionButton>
+              <PermissionButton
                 onClick={saveNewRole}
               >
                 Kaydet
-              </Button>
+              </PermissionButton>
             </div>
           </div>
         </div>
@@ -515,32 +517,31 @@ export default function RolesPage() {
                   <td className="py-3 px-4 text-center relative">
                     {editingRoleId === role.id ? (
                       <div className="flex justify-center space-x-2">
-                        <Button
+                        <PermissionButton
                           variant="success"
                           size="sm"
                           onClick={saveRole}
                           title="Kaydet"
                         >
                           ✓
-                        </Button>
-                        <Button
+                        </PermissionButton>
+                        <PermissionButton
                           variant="danger"
                           size="sm"
                           onClick={cancelEditing}
                           title="İptal"
                         >
                           ✕
-                        </Button>
+                        </PermissionButton>
                       </div>
                     ) : (
                       <div className="relative" ref={openRoleId === role.id ? dropdownRef : null}>
-                        <Button
+                        <PermissionButton
                           className="text-gray-500    hover:text-gray-700"
                           onClick={() => toggleRoleDropdown(role.id)}
                           variant="ghost"
 
                           permissionsRequired={['delete:role','update:role']}
-                          userPermissions={user?.permissions}
                           requirementType = "some"
                         >
                           <svg
@@ -557,31 +558,29 @@ export default function RolesPage() {
                               d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
                             />
                           </svg>
-                        </Button>
+                        </PermissionButton>
 
                         {openRoleId === role.id && (
                         <div className="absolute right-1 mt-2 w-32 bg-white rounded-md shadow-lg z-10">
                           <div className="py-1 flex flex-col items-center justify-center gap-2 p-2">
-                            <Button
+                            <PermissionButton
                               key={`edit-btn-${role.id}`}
                               permissionsRequired={['update:role']}
-                              userPermissions={user?.permissions}
                               variant="ghost"
                               onClick={() => startEditing(role)}
                               className="w-full text-center justify-center"
                             >
                               Düzenle
-                            </Button>
-                            <Button
+                            </PermissionButton>
+                            <PermissionButton
                               key={`delete-btn-${role.id}`}
                               permissionsRequired={['delete:role']}
-                              userPermissions={user?.permissions}
                               variant="danger"
                               onClick={() => deleteRole(role.id)}
                               className="w-full text-center justify-center"
                                 >
                                   Sil
-                                </Button>
+                                </PermissionButton>
                               </div>
                            </div>
                          )}

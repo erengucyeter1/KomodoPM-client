@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axiosInstance from "@/utils/axios";
 import Modal from "@/components/ui/modal/Modal";
-import Button from "@/components/ui/button/Button";
+import PermissionButton from "@/components/ui/button/Button";
 import Alert from "@/components/ui/feedback/Alert";
 import Loading from "@/components/ui/feedback/Loading";
 import { useAuth } from "@/hooks/useAuth"; // useAuth hook'unu ekleyin
@@ -246,21 +246,20 @@ export default function RoleAssignModal({
           </div>
           
           <div className="pt-4 border-t flex justify-end space-x-2">
-            <Button 
+            <PermissionButton 
               variant="secondary"
               onClick={onClose}
               disabled={isSaving}
             >
               İptal
-            </Button>
-            <Button
+            </PermissionButton>
+            <PermissionButton
               permissionsRequired={['update:user_roles']}
-              userPermissions={currentUser?.permissions} // Oturum açmış kullanıcının izinlerini kullan
               onClick={handleSave}
               isLoading={isSaving}
             >
               Rolleri Kaydet
-            </Button>
+            </PermissionButton>
           </div>
         </div>
       )}

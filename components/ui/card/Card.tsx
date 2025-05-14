@@ -18,9 +18,8 @@ export default function Card({
   className = "", 
   actions,
   permissionsRequired,
-  userPermissions
 }: CardProps) {
-  if (!hasRequiredPermissions(permissionsRequired, userPermissions)) {
+  if (!hasRequiredPermissions(permissionsRequired)) {
     return forbiddenWarning(); // İzin yoksa hiçbir şey gösterme
   }
   

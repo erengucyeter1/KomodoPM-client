@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import axiosInstance from "@/utils/axios";
 import { useAuth } from "@/hooks/useAuth";
 import Card from "@/components/ui/card/Card";
-import Button from "@/components/ui/button/Button";
+import PermissionButton from "@/components/ui/button/Button";
 import Alert from "@/components/ui/feedback/Alert";
 import Loading from "@/components/ui/feedback/Loading";
 import Link from "next/link";
@@ -40,7 +40,7 @@ interface Project {
 }
 
 export default function ProjectsPage() {
-  const { loading: authLoading } = useAuth();
+  const { loading: authLoading , user} = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -151,9 +151,9 @@ export default function ProjectsPage() {
         title="Projeler" 
         actions={
           <Link href="/projects/create">
-            <Button startIcon="+">
+            <PermissionButton startIcon="+"  permissionsRequired={['create:project']}>
               Yeni Proje
-            </Button>
+            </PermissionButton>
           </Link>
         }
       >

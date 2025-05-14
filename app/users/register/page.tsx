@@ -14,12 +14,11 @@ export default function RegisterUserPage() {
 
   return (
     <Card 
-      userPermissions={user?.permissions}
       permissionsRequired={['add:user']}
       title="Yeni Kullanıcı Tanımla" 
       subtitle="Komodo Proje Yönetim Sistemine yeni kullanıcı ekleyin"
     >
-      <UserForm />
+      <UserForm permissionsRequired={['add:user']} />
     </Card>
   );
 }

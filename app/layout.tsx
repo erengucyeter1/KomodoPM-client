@@ -16,7 +16,7 @@ export default function RootLayout({
   return (
     <html lang="tr">
       <body>
-        <AuthProvider>
+        <AuthProvider >
           <DashboardLayout>{children}</DashboardLayout>
         </AuthProvider>
       </body>

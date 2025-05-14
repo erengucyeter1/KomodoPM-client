@@ -5,8 +5,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import Card from "@/components/ui/card/Card";
 import Loading from "@/components/ui/feedback/Loading";
-import Button from "@/components/ui/button/Button";
+import PermissionButton from "@/components/ui/button/Button";
 import Link from "next/link";
+import { User } from "@/types/UserInterface";
 
 interface DashboardStats {
   totalUsers: number;
@@ -108,19 +109,19 @@ export default function DashboardPage() {
         <Card title="Hızlı Erişim">
           <div className="space-y-2">
             <Link href="/users">
-              <Button variant="secondary" className="w-full mb-2">
+              <PermissionButton variant="secondary" permissionsRequired={['see:users']} className="w-full mb-2">
                 Kullanıcıları Yönet
-              </Button>
+              </PermissionButton>
             </Link>
             <Link href="/projects">
-              <Button variant="secondary" className="w-full mb-2">
+              <PermissionButton variant="secondary" permissionsRequired={['see:projects']} className="w-full mb-2">
                 Projeleri Görüntüle
-              </Button>
+              </PermissionButton>
             </Link>
             <Link href="/users/register">
-              <Button variant="primary" className="w-full">
+              <PermissionButton variant="primary" permissionsRequired={['add:user']} className="w-full">
                 Yeni Kullanıcı Ekle
-              </Button>
+              </PermissionButton>
             </Link>
           </div>
         </Card>

@@ -12,12 +12,11 @@ interface PermissionLinkProps extends React.ComponentPropsWithoutRef<typeof Link
 export default function PermissionLink({
   children,
   permissionsRequired,
-  userPermissions,
   fallback = null,
   ...props
 }: PermissionLinkProps) {
   // Check if user has required permissions
-  if (!hasRequiredPermissions(permissionsRequired, userPermissions)) {
+  if (!hasRequiredPermissions(permissionsRequired)) {
     return <>{fallback}</>;
   }
 

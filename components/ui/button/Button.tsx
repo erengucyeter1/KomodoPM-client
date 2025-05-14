@@ -1,6 +1,7 @@
 import React from "react";
 import { PermissionProps } from '@/lib/permissions/types';
 import { hasRequiredPermissions } from '@/lib/permissions/utils';
+import { useAuth } from "@/hooks/useAuth";
 
 type ButtonVariant = "primary" | "secondary" | "danger" | "success" | "ghost";
 type ButtonSize = "sm" | "md" | "lg";
@@ -44,7 +45,7 @@ const getSizeClasses = (size: ButtonSize): string => {
   }
 };
 
-export default function Button({
+export default function PermissionButton({
   children,
   variant = "primary",
   size = "md",
@@ -54,12 +55,13 @@ export default function Button({
   endIcon,
   disabled,
   permissionsRequired,
-  userPermissions,
   requirementType = "every",
   ...props
 }: ButtonProps) {
+
   
-  if (!hasRequiredPermissions(permissionsRequired, userPermissions, requirementType)) {
+  
+  if (!hasRequiredPermissions(permissionsRequired, requirementType)) {
     return null;
   }
 

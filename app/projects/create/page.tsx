@@ -3,13 +3,16 @@
 import { useState, useEffect } from "react";
 import { useRouter } from 'next/navigation';
 import Card from "@/components/ui/card/Card";
-import Button from "@/components/ui/button/Button";
+import PermissionButton from "@/components/ui/button/Button";
 import Alert from "@/components/ui/feedback/Alert";
 import Loading from "@/components/ui/feedback/Loading";
 import axiosInstance from "@/utils/axios";
 import { useForm } from "react-hook-form";
 import { format } from "date-fns";
 import { useAuth } from "@/hooks/useAuth"; // Import the auth hook
+
+import {forbiddenWarning} from "@/lib/permissions/messageComponents";
+import {hasRequiredPermissions} from "@/lib/permissions/utils";
 
 // trailer model tipi
 interface TrailerModel {
@@ -57,6 +60,10 @@ export default function CreateProjectPage() {
       end_date: format(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), "yyyy-MM-dd") // 30 days from now
     }
   });
+
+  if (!hasRequiredPermissions(['create:project'], user?.permissions)) {
+    return forbiddenWarning();// İzin yoksa hiçbir şey gösterme
+  }
   
   // trailer modellerini backend'den çek
   useEffect(() => {
@@ -305,21 +312,21 @@ export default function CreateProjectPage() {
           
           {/* Form Actions */}
           <div className="flex justify-end space-x-3">
-            <Button
+            <PermissionButton
               type="button"
               variant="outlined"
               onClick={() => router.push("/projects")}
               disabled={isSubmitting}
             >
               İptal
-            </Button>
-            <Button
+            </PermissionButton>
+            <PermissionButton
               type="submit"
               disabled={isSubmitting}
               startIcon={isSubmitting ? <Loading size="small" /> : undefined}
             >
               {isSubmitting ? "Oluşturuluyor..." : "Proje Oluştur"}
-            </Button>
+            </PermissionButton>
           </div>
         </form>
       </Card>

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import DataTable from "@/components/ui/table/DataTable";
-import Button from "@/components/ui/button/Button";
+import PermissionButton from "@/components/ui/button/Button";
 import RoleAssignModal from "@/components/features/users/RoleAssignModal";
 import { hasRequiredPermissions } from "@/lib/permissions/utils";
 import {forbiddenWarning} from "@/lib/permissions/messageComponents";
@@ -20,16 +20,16 @@ interface User {
 interface UsersTableProps {
   users: User[];
   isLoading: boolean;
+  permissionsRequired: string[];
   onUserUpdate?: (updatedUser: User) => void;
 }
 
-export default function UsersTable({ users, isLoading, onUserUpdate ,  permissionsRequired,
-  userPermissions}: UsersTableProps) {
+export default function UsersTable({ users, isLoading, onUserUpdate ,  permissionsRequired}: UsersTableProps) {
 
 
   // Check if the user has the required permissions to view this component
 
-  if (!hasRequiredPermissions(permissionsRequired, userPermissions)) {
+  if (!hasRequiredPermissions(permissionsRequired)) {
     return forbiddenWarning(); // If no permissions, render nothing
   }
   
@@ -72,24 +72,22 @@ export default function UsersTable({ users, isLoading, onUserUpdate ,  permissio
       className: "text-center",
       render: (tempUser: User) => (
         <div className="flex space-x-2 justify-center">
-          <Button
+          <PermissionButton
               permissionsRequired ={['see:user_details']}
-              userPermissions = {user?.permissions}
             variant="secondary"
             size="sm"
             onClick={() => router.push(`/users/${tempUser.id}`)}
           >
             Detaylar
-          </Button>
-          <Button
+          </PermissionButton>
+          <PermissionButton
           permissionsRequired ={['see:user_roles']}
-          userPermissions = {user?.permissions}
             variant="primary"
             size="sm"
             onClick={() => handleRoleEdit(tempUser)}
           >
             Roller
-          </Button>
+          </PermissionButton>
         </div>
       ),
     },

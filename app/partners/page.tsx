@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import axiosInstance from "@/utils/axios";
-import Button from "@/components/ui/button/Button";
+import PermissionButton from "@/components/ui/button/Button";
 import Card from "@/components/ui/card/Card";
 import DataTable from "@/components/ui/table/DataTable";
 import Alert from "@/components/ui/feedback/Alert";
@@ -80,13 +80,13 @@ export default function PartnersPage() {
       className: "text-center",
       render: (partner: Partner) => (
         <div className="flex space-x-2 justify-center">
-          <Button
+          <PermissionButton
             variant="secondary"
             size="sm"
             onClick={() => router.push(`/partners/${partner.id}`)}
           >
             Detaylar
-          </Button>
+          </PermissionButton>
         </div>
       ),
     },
@@ -97,12 +97,12 @@ export default function PartnersPage() {
       <Card 
         title="Müşteri ve Tedarikçiler" 
         actions={
-          <Button 
+          <PermissionButton 
             variant="primary" 
             onClick={() => router.push("/partners/new")}
           >
             Yeni Ekle
-          </Button>
+          </PermissionButton>
         }
       >
         {error && <Alert type="error" message={error} className="mb-4" />}
@@ -115,13 +115,13 @@ export default function PartnersPage() {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full"
           />
-          <Button 
+          <PermissionButton 
             variant="secondary" 
             onClick={handleSearch} 
             className="flex-shrink-0 w-28 h-10 whitespace-nowrap"
           >
             Ara
-          </Button>
+          </PermissionButton>
         </div>
         
         {loading ? (

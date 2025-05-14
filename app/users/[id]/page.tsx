@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import axiosInstance from "@/utils/axios";
 import { useAuth } from "@/hooks/useAuth";
 import Card from "@/components/ui/card/Card";
-import Button from "@/components/ui/button/Button";
+import PermissionButton from "@/components/ui/button/Button";
 import Alert from "@/components/ui/feedback/Alert";
 import Loading from "@/components/ui/feedback/Loading";
 import UserForm from "@/components/features/users/UserForm";
@@ -82,9 +82,9 @@ export default function UserDetailPage() {
       <Card>
         <Alert type="error" message={error} />
         <div className="mt-4">
-          <Button variant="secondary" onClick={() => router.push("/users")}>
+          <PermissionButton variant="secondary" onClick={() => router.push("/users")}>
             Kullanıcılar Sayfasına Dön
-          </Button>
+          </PermissionButton>
         </div>
       </Card>
     );
@@ -107,27 +107,25 @@ export default function UserDetailPage() {
 
   return (
     <Card
-      userPermissions={user?.permissions}
       permissionsRequired={['see:user_details']} 
       title="Kullanıcı Detayları" 
       actions={
         <div className="flex space-x-2">
-          <Button
+          <PermissionButton
               permissionsRequired = {['update:user']}
-              userPermissions = {user?.permissions}
             variant="secondary"
             onClick={() => setIsEditMode(true)}
           >
             Düzenle
-          </Button>
-          <Button
+          </PermissionButton>
+          <PermissionButton
           permissionsRequired = {['delete:user']}
-          userPermissions = {user?.permissions}
+        
             variant="danger"
             onClick={handleDelete}
           >
             Sil
-          </Button>
+          </PermissionButton>
         </div>
       }
     >
@@ -173,12 +171,12 @@ export default function UserDetailPage() {
           </div>
           
           <div className="flex justify-end">
-            <Button
+            <PermissionButton
               variant="secondary"
               onClick={() => router.push("/users")}
             >
               Kullanıcılar Listesine Dön
-            </Button>
+            </PermissionButton>
           </div>
         </div>
       )}

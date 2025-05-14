@@ -3,12 +3,22 @@
 import { useState, useEffect, createContext, useContext } from 'react';
 import { useRouter } from 'next/navigation';
 import axiosInstance from '@/utils/axios';
+import { User } from '@/types/UserInterface';
 
-// Create auth context
-const AuthContext = createContext(null);
+interface AuthContextType {
+  user: User | null;
+  loading: boolean;
+  login: (username: string, password: string) => Promise<boolean>;
+  logout: () => void;
+  hasPermission: (permissionId: string) => boolean;
+}
 
-export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
+// Context'i doğru tip ile oluşturun
+const AuthContext = createContext<AuthContextType | null>(null);
+
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -39,7 +49,7 @@ export function AuthProvider({ children }) {
     loadUser();
   }, []);
 
-  function parseJwt(token) {
+  function parseJwt(token: string) {
     try {
       // JWT'nin payload kısmını al
       const base64Url = token.split('.')[1];
@@ -63,7 +73,7 @@ export function AuthProvider({ children }) {
   }
   
   // Login function
-  const login = async (username, password) => {
+  const login = async (username: string, password: string) => {
     try {
       
       const response = await axiosInstance.post('/auth/login', { username, password });
@@ -95,17 +105,13 @@ export function AuthProvider({ children }) {
   };
 
   // Check if user has a specific permission
-  const hasPermission = (permissionId) => {
+  const hasPermission = (permissionId: string) => {
     if (!user) return false;
     // Check both permissions and authorization_ids for backward compatibility
     const userPermissions = user.permissions || user.authorization_ids || [];
     return userPermissions.includes(permissionId);
   };
 
-  // Check if user is admin
-  const isAdmin = () => {
-    return hasPermission(4);
-  };
 
   return (
     <AuthContext.Provider value={{ 
@@ -137,14 +143,7 @@ export function useAuth(adminRequired = false) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   
-  const { user, loading, isAdmin } = context;
-
-  // Redirect if admin access required but user is not admin
-  useEffect(() => {
-    if (!loading && adminRequired && !isAdmin()) {
-      router.push('/dashboard');
-    }
-  }, [loading, adminRequired, isAdmin, router]);
+  const { user, loading } = context;
 
   return context;
 }

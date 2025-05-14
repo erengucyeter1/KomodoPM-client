@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Button from "@/components/ui/button/Button";
+import PermissionButton from "@/components/ui/button/Button";
 import Alert from "@/components/ui/feedback/Alert";
 
 interface TrailerFormProps {
@@ -154,19 +154,20 @@ export default function TrailerForm({ initialData, onSubmit, onCancel }: Trailer
       )}
       
       <div className="flex justify-end space-x-3 pt-4">
-        <Button
+        <PermissionButton
           variant="outlined"
           onClick={onCancel}
           disabled={loading}
         >
           İptal
-        </Button>
-        <Button
+        </PermissionButton>
+        <PermissionButton
+          permissionsRequired={['create:trailer']}
           type="submit"
           disabled={loading}
         >
           {loading ? "Kaydediliyor..." : initialData ? "Güncelle" : "Ekle"}
-        </Button>
+        </PermissionButton>
       </div>
     </form>
   );

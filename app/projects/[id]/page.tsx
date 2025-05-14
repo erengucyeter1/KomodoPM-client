@@ -4,14 +4,15 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import axiosInstance from "@/utils/axios";
 import Card from "@/components/ui/card/Card";
-import Button from "@/components/ui/button/Button";
+import PermissionButton from "@/components/ui/button/Button";
 import Alert from "@/components/ui/feedback/Alert";
 import Loading from "@/components/ui/feedback/Loading";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import Link from "next/link";
 import { Download } from "lucide-react"; // Yeni ikon için import
-
+import InfoIcon from "@/components/ui/info/infoIcon";
+import {useAuth} from "@/hooks/useAuth"
 // Type definitions
 interface TrailerType {
   id: string;
@@ -37,6 +38,7 @@ interface ExpenseAllocationType {
 }
 
 interface ProjectExpense {
+  
   id: string;
   amount: number;
   product_code?: string;
@@ -70,6 +72,7 @@ interface Project {
 }
 
 export default function ProjectDetailPage() {
+  const { user} = useAuth();
   const params = useParams();
   const router = useRouter();
   const projectId = params.id as string;
@@ -247,7 +250,7 @@ export default function ProjectDetailPage() {
       {/* Header with back button and actions */}
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-4">
-          <Button
+          <PermissionButton
             variant="secondary"
             onClick={() => router.back()}
             startIcon={
@@ -257,12 +260,21 @@ export default function ProjectDetailPage() {
             }
           >
             Geri
-          </Button>
+          </PermissionButton>
           <h1 className="text-2xl font-bold">{project.name}</h1>
         </div>
 
         <div className="flex gap-3">
-          <Button onClick={handleDownloadReport} disabled={isDownloadingReport}>
+          
+          <div className="flex items-center gap-2">
+            
+              <InfoIcon info="Proje tamamlanmadan oluşturulan raporlar ön gösterim amaçlıdır. Geçerli bir rapor oluşturmak için önce proje tamamlanmalıdır. Proje tamamlandıktan sonra oluşturulan rapor tek sefer üretilir ve saklanır. değişiklik yapmak mümkün değildir." />
+            
+          </div>
+          
+
+          
+          <PermissionButton onClick={handleDownloadReport} disabled={isDownloadingReport}  permissionsRequired={["create:projectExpenseReport"]}>
             <span className="flex items-center gap-2">
               {isDownloadingReport ? (
                 <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -274,7 +286,7 @@ export default function ProjectDetailPage() {
               )}
               {isDownloadingReport ? "Oluşturuluyor..." : "Rapor Oluştur"}
             </span>
-          </Button>
+          </PermissionButton>
         </div>
       </div>
 
@@ -311,9 +323,9 @@ export default function ProjectDetailPage() {
                 </span>
 
                 {status.label !== "Tamamlandı" && (
-                  <Button className="ml-2 " variant="secondary" onClick={() => handleCompleteProject()}>
+                  <PermissionButton className="ml-2 " variant="secondary" onClick={() => handleCompleteProject()}>
                     Projeyi Tamamla
-                  </Button>
+                  </PermissionButton>
                 )}
               </div>
 
@@ -446,7 +458,7 @@ export default function ProjectDetailPage() {
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold">Proje Giderleri</h2>
           <Link href={`/projects/${projectId}/newExpense`}>
-            <Button startIcon={<span>+</span>}>Yeni Gider Ekle</Button>
+            <PermissionButton startIcon={<span>+</span>}>Yeni Gider Ekle</PermissionButton>
           </Link>
         </div>
         {projectExpenses.length === 0 ? (

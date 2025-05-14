@@ -6,8 +6,13 @@ import EmptyStatePanel from '@/components/features/chat/EmptyStatePanel';
 import Card from '@/components/ui/card/Card';
 import { useChatService } from '@/hooks/useChatService';
 import Loading from '@/components/ui/feedback/Loading';
+import { withPermissions } from '@/hoc/withPermissions';
 
-export default function ChatPage() {
+export default withPermissions(ChatPage, ['see:chat']);
+
+function ChatPage() {
+
+
   const { 
     users, 
     selectedUser, 
@@ -21,6 +26,7 @@ export default function ChatPage() {
   if (isLoading) {
     return <Loading text="Mesajlaşma hizmetine bağlanılıyor..." />;
   }
+
 
   return (
     <Card className="h-[calc(100vh-12rem)] p-0 overflow-hidden">

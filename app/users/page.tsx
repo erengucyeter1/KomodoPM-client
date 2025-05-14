@@ -6,7 +6,7 @@ import Link from "next/link";
 import axiosInstance from "@/utils/axios";
 import { useAuth } from "@/hooks/useAuth";
 import Card from "@/components/ui/card/Card";
-import Button from "@/components/ui/button/Button";
+import PermissionButton from "@/components/ui/button/Button";
 import Alert from "@/components/ui/feedback/Alert";
 import UsersTable from "@/components/features/users/UsersTable";
 
@@ -74,20 +74,18 @@ export default function UsersPage() {
 
   return (
     <Card 
-    userPermissions={user?.permissions}
     permissionsRequired={['see:users']}
       title="Tüm Kullanıcılar" 
       actions={
         <Link href="/users/register">
-          <Button 
+          <PermissionButton 
 
           startIcon="+"
           permissionsRequired={['add:user']}
-          userPermissions={user?.permissions}
 
           >
             Yeni Kullanıcı Ekle
-            </Button>
+            </PermissionButton>
         </Link>
       }
     >
@@ -99,7 +97,6 @@ export default function UsersPage() {
         isLoading={isLoading} 
         onUserUpdate={handleUserUpdate}
         permissionsRequired={['see:users']}
-        userPermissions={user?.permissions} // Pass user permissions to UsersTable
       />
     </Card>
   );

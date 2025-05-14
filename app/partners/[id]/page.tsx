@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import axiosInstance from "@/utils/axios";
 import Card from "@/components/ui/card/Card";
-import Button from "@/components/ui/button/Button";
+import PermissionButton from "@/components/ui/button/Button";
 import Alert from "@/components/ui/feedback/Alert";
 import Loading from "@/components/ui/feedback/Loading";
 import { useForm } from "react-hook-form";
@@ -93,9 +93,9 @@ export default function PartnerDetailPage() {
       <Card>
         <Alert type="error" message={error} />
         <div className="mt-4">
-          <Button variant="secondary" onClick={() => router.push("/partners")}>
+          <PermissionButton variant="secondary" onClick={() => router.push("/partners")}>
             Müşteri/Tedarikçiler Sayfasına Dön
-          </Button>
+          </PermissionButton>
         </div>
       </Card>
     );
@@ -122,18 +122,18 @@ export default function PartnerDetailPage() {
         title={`${partner?.title || 'Müşteri/Tedarikçi'} Detayları`}
         actions={
           <div className="flex space-x-2">
-            <Button
+            <PermissionButton
               variant="secondary"
               onClick={() => setIsEditMode(true)}
             >
               Düzenle
-            </Button>
-            <Button
+            </PermissionButton>
+            <PermissionButton
               variant="danger"
               onClick={handleDelete}
             >
               Sil
-            </Button>
+            </PermissionButton>
           </div>
         }
       >
@@ -202,9 +202,9 @@ export default function PartnerDetailPage() {
         )}
         
         <div className="mt-8">
-          <Button variant="secondary" onClick={() => router.push("/partners")}>
+          <PermissionButton variant="secondary" onClick={() => router.push("/partners")}>
             Müşteri/Tedarikçiler Listesine Dön
-          </Button>
+          </PermissionButton>
         </div>
       </Card>
     </div>
@@ -407,17 +407,17 @@ function PartnerForm({ initialData, isEditing = false, onSuccess }: PartnerFormP
         />
 
         <div className="flex gap-4 pt-2">
-          <Button
+          <PermissionButton
             type="button"
             variant="secondary"
             onClick={() => router.push("/partners")}
           >
             İptal
-          </Button>
+          </PermissionButton>
 
-          <Button type="submit" isLoading={loading}>
+          <PermissionButton type="submit" isLoading={loading}>
             {isEditing ? "Güncelle" : "Oluştur"}
-          </Button>
+          </PermissionButton>
         </div>
       </form>
     </Form>

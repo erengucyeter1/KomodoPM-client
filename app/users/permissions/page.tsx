@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import axiosInstance from "@/utils/axios";
 import { useAuth } from "@/hooks/useAuth";
 import Card from "@/components/ui/card/Card";
-import Button from "@/components/ui/button/Button";
+import PermissionButton from "@/components/ui/button/Button";
 import Alert from "@/components/ui/feedback/Alert";
 import Loading from "@/components/ui/feedback/Loading";
 import TextInput from "@/components/ui/form/TextInput";
@@ -196,12 +196,11 @@ export default function PermissionsPage() {
       title="İzin Yönetimi" 
       actions={
         !isAddingPermission && !isEditingPermission && (
-          <Button 
-          userPermissions={user?.permissions}
+          <PermissionButton 
           permissionsRequired={['add:permission']}
           onClick={() => setIsAddingPermission(true)}>
             Yeni İzin Ekle
-          </Button>
+          </PermissionButton>
         )
       }
     >
@@ -244,7 +243,7 @@ export default function PermissionsPage() {
               </div>
               
               <div className="flex gap-2 justify-end">
-                <Button 
+                <PermissionButton 
                   type="button" 
                   variant="secondary"
                   onClick={() => {
@@ -255,10 +254,10 @@ export default function PermissionsPage() {
                   }}
                 >
                   İptal
-                </Button>
-                <Button type="submit">
+                </PermissionButton>
+                <PermissionButton type="submit">
                   {isEditingPermission ? "Güncelle" : "Kaydet"}
-                </Button>
+                </PermissionButton>
               </div>
             </div>
           </form>
@@ -304,26 +303,24 @@ export default function PermissionsPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex justify-end space-x-2">
-                        <Button
+                        <PermissionButton
                           variant="secondary"
-                          size="xs"
+                          size="sm"
                           className="px-2 py-1 text-xs"
-                          userPermissions={user?.permissions}
                           permissionsRequired={['update:permissions']}
                           onClick={() => handleUpdatePermission(permission.id)}
                         >
                           Düzenle
-                        </Button>
-                        <Button
+                        </PermissionButton>
+                        <PermissionButton
                           variant="danger"
-                          size="xs"
+                          size="sm"
                           className="px-2 py-1 text-xs"
-                          userPermissions={user?.permissions}
                           permissionsRequired={['delete:permission']}
                           onClick={() => handleDeletePermission(permission.id)}
                         >
                           Sil
-                        </Button>
+                        </PermissionButton>
                        
                       </div>
                     </td>

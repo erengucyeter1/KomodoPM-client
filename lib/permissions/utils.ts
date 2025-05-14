@@ -1,10 +1,12 @@
-import { PermissionProps } from './types';
+import { useAuth } from '@/hooks/useAuth';
 
 export function hasRequiredPermissions(
   permissionsRequired?: string[],
-  userPermissions?: string[],
   requirementType: "every" | "some" = "every"
 ): boolean {
+  const { user } = useAuth();
+  const userPermissions = user?.permissions;
+
   // İzin kontrolü yoksa herkes görebilir
   if (!permissionsRequired || permissionsRequired.length === 0) {
     return true;

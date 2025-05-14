@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import axiosInstance from "@/utils/axios";
 import Card from "@/components/ui/card/Card";
-import Button from "@/components/ui/button/Button";
+import PermissionButton from "@/components/ui/button/Button";
 import Alert from "@/components/ui/feedback/Alert";
 import Loading from "@/components/ui/feedback/Loading";
 import { FiPlus, FiTrash2, FiEdit, FiX } from "react-icons/fi";
@@ -89,7 +89,9 @@ export default function TrailersPage() {
       <Card 
         title="Römork Modelleri" 
         actions={
-          <Button 
+          <PermissionButton 
+            
+            permissionsRequired={['create:trailer']}
             startIcon={<FiPlus />}
             onClick={() => {
               setCurrentTrailer(null);
@@ -97,7 +99,7 @@ export default function TrailersPage() {
             }}
           >
             Yeni Römork
-          </Button>
+          </PermissionButton>
         }
       >
         {error && <Alert type="error" message={error} className="mb-4" />}

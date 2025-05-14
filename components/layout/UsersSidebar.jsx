@@ -55,7 +55,6 @@ export default function UsersSidebar() {
             <li key={item.id}>
               <Button
                 variant="ghost"
-                userPermissions={user?.permissions}
                 permissionsRequired={item.permissions}
                 
                 onClick={() => handleMenuClick(item.id, item.path)}

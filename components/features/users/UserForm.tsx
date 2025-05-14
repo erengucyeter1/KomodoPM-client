@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import axiosInstance from "@/utils/axios";
 import TextInput from "@/components/ui/form/TextInput";
-import Button from "@/components/ui/button/Button";
+import PermissionButton from "@/components/ui/button/Button";
 import Alert from "@/components/ui/feedback/Alert";
 import {forbiddenWarning} from "@/lib/permissions/messageComponents";
 import {hasRequiredPermissions} from "@/lib/permissions/utils";
@@ -19,6 +19,7 @@ interface UserFormData {
 interface UserFormProps {
   initialData?: Partial<UserFormData>;
   isEditing?: boolean;
+  permissionsRequired: string[];
   onSuccess?: () => void;
 }
 
@@ -27,11 +28,10 @@ export default function UserForm({
   isEditing = false,
   onSuccess,
   permissionsRequired,
-  userPermissions
 
 }: UserFormProps) {
 
-  if (!hasRequiredPermissions(permissionsRequired, userPermissions)) {
+  if (!hasRequiredPermissions(permissionsRequired)) {
     return forbiddenWarning();// İzin yoksa hiçbir şey gösterme
   }
 
@@ -151,18 +151,18 @@ export default function UserForm({
       />
 
       <div className="flex gap-4 pt-2">
-        <Button
+        <PermissionButton
 
           type="button"
           variant="secondary"
           onClick={() => router.push("/users")}
         >
           İptal
-        </Button>
+        </PermissionButton>
 
-        <Button type="submit" isLoading={loading}>
+        <PermissionButton type="submit" isLoading={loading}>
           {isEditing ? "Kullanıcıyı Güncelle" : "Kullanıcı Oluştur"}
-        </Button>
+        </PermissionButton>
       </div>
     </form>
   );

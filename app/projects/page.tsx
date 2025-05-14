@@ -40,7 +40,7 @@ interface Project {
 }
 
 export default function ProjectsPage() {
-  const { loading: authLoading , user} = useAuth();
+  const { isLoading: authLoading , user} = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");

@@ -7,15 +7,16 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import axiosInstance from "@/utils/axios";
 import {useAuth} from "@/hooks/useAuth";
+import { withPermissions } from "@/hoc/withPermissions";
 
 interface IProductEntity{
   balance: string,
   measurement_unit: string,
 }
 
+export default withPermissions(NewExpensePage, ["create:projectExpense"]);
 
-
-export default function NewExpensePage() {
+function NewExpensePage() {
   const [stockCode, setStockCode] = useState("");
   const{user} = useAuth();
   const [quantity, setQuantity] = useState("");

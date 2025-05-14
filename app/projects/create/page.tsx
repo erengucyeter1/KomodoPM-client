@@ -11,8 +11,7 @@ import { useForm } from "react-hook-form";
 import { format } from "date-fns";
 import { useAuth } from "@/hooks/useAuth"; // Import the auth hook
 
-import {forbiddenWarning} from "@/lib/permissions/messageComponents";
-import {hasRequiredPermissions} from "@/lib/permissions/utils";
+import { withPermissions } from "@/hoc/withPermissions";
 
 // trailer model tipi
 interface TrailerModel {
@@ -42,7 +41,9 @@ interface ProjectFormData {
   description: string;
 }
 
-export default function CreateProjectPage() {
+export default withPermissions(CreateProjectPage, ["create:project"]);
+
+function CreateProjectPage() {
   const router = useRouter();
   const { user } = useAuth(); // Get authenticated user
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -61,9 +62,7 @@ export default function CreateProjectPage() {
     }
   });
 
-  if (!hasRequiredPermissions(['create:project'], user?.permissions)) {
-    return forbiddenWarning();// İzin yoksa hiçbir şey gösterme
-  }
+ 
   
   // trailer modellerini backend'den çek
   useEffect(() => {
@@ -314,7 +313,7 @@ export default function CreateProjectPage() {
           <div className="flex justify-end space-x-3">
             <PermissionButton
               type="button"
-              variant="outlined"
+              variant= "danger"
               onClick={() => router.push("/projects")}
               disabled={isSubmitting}
             >
@@ -323,7 +322,7 @@ export default function CreateProjectPage() {
             <PermissionButton
               type="submit"
               disabled={isSubmitting}
-              startIcon={isSubmitting ? <Loading size="small" /> : undefined}
+              startIcon={isSubmitting ? <Loading size="sm" /> : undefined}
             >
               {isSubmitting ? "Oluşturuluyor..." : "Proje Oluştur"}
             </PermissionButton>

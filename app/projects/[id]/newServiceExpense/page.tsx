@@ -25,6 +25,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Alert from "@/components/ui/feedback/Alert"; // Assuming you have an Alert component
 import { useAuth } from "@/hooks/useAuth";
+import { withPermissions } from "@/hoc/withPermissions";
 
 interface ServiceProduct {
   stock_code: string;
@@ -49,7 +50,9 @@ interface User {
 
 const columnHelper = createColumnHelper<ServiceProduct>();
 
-export default function NewServiceExpensePage() {
+export default withPermissions(NewServiceExpensePage, ["create:projectExpense"]);
+
+function NewServiceExpensePage() {
   const router = useRouter();
   const params = useParams();
   const projectId = params.id as string;

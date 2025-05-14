@@ -13,6 +13,9 @@ import Link from "next/link";
 import { Download } from "lucide-react"; // Yeni ikon için import
 import InfoIcon from "@/components/ui/info/infoIcon";
 import {useAuth} from "@/hooks/useAuth"
+import { withPermissions } from "@/hoc/withPermissions";
+import { User } from "@/types/UserInterface";
+
 // Type definitions
 interface TrailerType {
   id: string;
@@ -20,15 +23,6 @@ interface TrailerType {
   description?: string;
   image_data?: string;
   image_content_type?: string;
-}
-
-interface User {
-  id: string;
-  name: string;
-  surname?: string;
-  username: string;
-  email: string;
-  role?: string;
 }
 
 interface ExpenseAllocationType {
@@ -40,6 +34,7 @@ interface ExpenseAllocationType {
 interface ProjectExpense {
   
   id: string;
+  user: User;
   amount: number;
   product_code?: string;
   quantity?: number;
@@ -71,7 +66,9 @@ interface Project {
   project_expenses?: ProjectExpense[];
 }
 
-export default function ProjectDetailPage() {
+export default withPermissions(ProjectDetailPage, ["see:projectDetail"]);
+
+function ProjectDetailPage() {
   const { user} = useAuth();
   const params = useParams();
   const router = useRouter();
@@ -323,7 +320,7 @@ export default function ProjectDetailPage() {
                 </span>
 
                 {status.label !== "Tamamlandı" && (
-                  <PermissionButton className="ml-2 " variant="secondary" onClick={() => handleCompleteProject()}>
+                  <PermissionButton  permissionsRequired={["update:projectStatus"]}  className="ml-2 " variant="secondary" onClick={() => handleCompleteProject()}>
                     Projeyi Tamamla
                   </PermissionButton>
                 )}
@@ -458,7 +455,7 @@ export default function ProjectDetailPage() {
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold">Proje Giderleri</h2>
           <Link href={`/projects/${projectId}/newExpense`}>
-            <PermissionButton startIcon={<span>+</span>}>Yeni Gider Ekle</PermissionButton>
+            <PermissionButton  permissionsRequired={["create:projectExpense"]} startIcon={<span>+</span>}>Yeni Gider Ekle</PermissionButton>
           </Link>
         </div>
         {projectExpenses.length === 0 ? (

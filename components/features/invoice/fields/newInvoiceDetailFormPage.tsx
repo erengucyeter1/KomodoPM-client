@@ -55,7 +55,7 @@ export function NewInvoiceDetailFormPage({ invoiceInfo }: { invoiceInfo: string 
             unitPrice: "",
             description: "",
             // KDV alanları
-            vatRate: "18",
+            vatRate: "20",
             vatAmount: "0.00",
             isVatExempt: false,
             vatExemptionReason: "",
@@ -89,7 +89,7 @@ export function NewInvoiceDetailFormPage({ invoiceInfo }: { invoiceInfo: string 
                         quantity: "",
                         unitPrice: "",
                         description: "",
-                        vatRate: "18",
+                        vatRate: "20",
                         vatAmount: "0.00",
                         isVatExempt: false,
                         vatExemptionReason: "",

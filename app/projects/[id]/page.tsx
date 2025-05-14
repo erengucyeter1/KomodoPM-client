@@ -235,6 +235,13 @@ export default function ProjectDetailPage() {
   const completionPercentage =
     project.budget > 0 ? Math.min(100, Math.round((project.total_expenses / project.budget) * 100)) : 0;
 
+
+  const handleCompleteProject = async () => {
+    await axiosInstance.put(`/projects/${projectId}/complete`);
+    router.refresh();
+  };
+
+
   return (
     <div className="space-y-8">
       {/* Header with back button and actions */}
@@ -298,10 +305,16 @@ export default function ProjectDetailPage() {
               </div>
 
               {/* Project status */}
-              <div>
+              <div className="flex justify-between items-center">
                 <span className={`px-4 py-2 rounded-full text-sm inline-block ${status.bgColor} ${status.color}`}>
                   {status.label}
                 </span>
+
+                {status.label !== "Tamamlandı" && (
+                  <Button className="ml-2 " variant="secondary" onClick={() => handleCompleteProject()}>
+                    Projeyi Tamamla
+                  </Button>
+                )}
               </div>
 
               {/* Key details */}

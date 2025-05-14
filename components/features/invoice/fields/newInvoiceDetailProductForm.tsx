@@ -25,6 +25,7 @@ export default function NewInvoiceDetailProductForm({ form }: { form: UseFormRet
         if (isService) {
             const uuid = uuidv4();
           form.setValue("product_code", uuid);
+          form.setValue("quantity", "1");
         } else {
           form.setValue("product_code", "");
         }

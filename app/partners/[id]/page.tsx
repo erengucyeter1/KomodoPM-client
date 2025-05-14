@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import axiosInstance from "@/utils/axios";
-import Card from "@/components/ui/card/Card";
+import PermissionsCard from "@/components/ui/card/Card";
 import PermissionButton from "@/components/ui/button/Button";
 import Alert from "@/components/ui/feedback/Alert";
 import Loading from "@/components/ui/feedback/Loading";
@@ -93,20 +93,20 @@ function PartnerDetailPage() {
 
   if (error && !partner) {
     return (
-      <Card>
+      <PermissionsCard>
         <Alert type="error" message={error} />
         <div className="mt-4">
           <PermissionButton variant="secondary" onClick={() => router.push("/partners")}>
             Müşteri/Tedarikçiler Sayfasına Dön
           </PermissionButton>
         </div>
-      </Card>
+      </PermissionsCard>
     );
   }
 
   if (isEditMode && partner) {
     return (
-      <Card title="Müşteri/Tedarikçi Düzenle">
+      <PermissionsCard title="Müşteri/Tedarikçi Düzenle">
         <PartnerForm 
           initialData={partner} 
           isEditing={true} 
@@ -115,13 +115,13 @@ function PartnerDetailPage() {
             fetchPartner();
           }} 
         />
-      </Card>
+      </PermissionsCard>
     );
   }
 
   return (
     <div className="container mx-auto p-4">
-      <Card
+      <PermissionsCard
         title={`${partner?.title || 'Müşteri/Tedarikçi'} Detayları`}
         actions={
           <div className="flex space-x-2">
@@ -211,7 +211,7 @@ function PartnerDetailPage() {
             Müşteri/Tedarikçiler Listesine Dön
           </PermissionButton>
         </div>
-      </Card>
+      </PermissionsCard>
     </div>
   );
 }

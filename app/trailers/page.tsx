@@ -3,12 +3,13 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import axiosInstance from "@/utils/axios";
-import Card from "@/components/ui/card/Card";
+import PermissionsCard from "@/components/ui/card/Card";
 import PermissionButton from "@/components/ui/button/Button";
 import Alert from "@/components/ui/feedback/Alert";
 import Loading from "@/components/ui/feedback/Loading";
 import { FiPlus, FiTrash2, FiEdit, FiX } from "react-icons/fi";
 import TrailerForm from  "./TrailerForm";
+import { withPermissions } from "@/hoc/withPermissions";
 
 interface Trailer {
   id: string | number;
@@ -19,7 +20,9 @@ interface Trailer {
   created_at: string;
 }
 
-export default function TrailersPage() {
+export default withPermissions(TrailersPage, ["see:trailers"]);
+
+function TrailersPage() {
   const [trailers, setTrailers] = useState<Trailer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -86,7 +89,7 @@ export default function TrailersPage() {
 
   return (
     <div className="space-y-6">
-      <Card 
+      <PermissionsCard 
         title="Römork Modelleri" 
         actions={
           <PermissionButton 
@@ -144,18 +147,20 @@ export default function TrailersPage() {
                       {new Date(trailer.created_at).toLocaleDateString('tr-TR')}
                     </div>
                     <div className="flex space-x-2">
-                      <button 
+                      <PermissionButton 
+                        permissionsRequired={["update:trailer"]}
                         onClick={() => openEditForm(trailer)}
                         className="p-1 text-blue-600 hover:bg-blue-50 rounded"
                       >
                         <FiEdit size={18} />
-                      </button>
-                      <button 
+                      </PermissionButton>
+                      <PermissionButton 
+                        permissionsRequired={["delete:trailer"]}
                         onClick={() => handleDeleteTrailer(trailer.id)}
                         className="p-1 text-red-600 hover:bg-red-50 rounded"
                       >
                         <FiTrash2 size={18} />
-                      </button>
+                      </PermissionButton>
                     </div>
                   </div>
                 </div>
@@ -163,7 +168,7 @@ export default function TrailersPage() {
             ))}
           </div>
         )}
-      </Card>
+      </PermissionsCard>
 
       {/* Trailer Form Modal */}
       {showForm && (

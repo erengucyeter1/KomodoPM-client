@@ -4,19 +4,23 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import axiosInstance from "@/utils/axios";
 import { useAuth } from "@/hooks/useAuth";
-import Card from "@/components/ui/card/Card";
+import PermissionsCard from "@/components/ui/card/Card";
 import PermissionButton from "@/components/ui/button/Button";
 import Alert from "@/components/ui/feedback/Alert";
 import Loading from "@/components/ui/feedback/Loading";
 import TextInput from "@/components/ui/form/TextInput";
-
+import { withPermissions } from "@/hoc/withPermissions";
 interface Permission {
   id: number;
   name: string;
   description: string;
 }
 
-export default function PermissionsPage() {
+
+
+export default withPermissions(PermissionsPage, ["see:permissions"]);
+
+function PermissionsPage() {
   const { user, loading: authLoading } = useAuth();
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -192,7 +196,7 @@ export default function PermissionsPage() {
   }
 
   return (
-    <Card 
+    <PermissionsCard 
       title="İzin Yönetimi" 
       actions={
         !isAddingPermission && !isEditingPermission && (
@@ -330,6 +334,6 @@ export default function PermissionsPage() {
             </tbody>
         </table>
       </div>
-    </Card>
+    </PermissionsCard>
   );
 }

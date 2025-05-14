@@ -4,12 +4,12 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import axiosInstance from "@/utils/axios";
 import { useAuth } from "@/hooks/useAuth";
-import Card from "@/components/ui/card/Card";
+import PermissionsCard from "@/components/ui/card/Card";
 import PermissionButton from "@/components/ui/button/Button";
 import Alert from "@/components/ui/feedback/Alert";
 import Loading from "@/components/ui/feedback/Loading";
 import UserForm from "@/components/features/users/UserForm";
-
+import { withPermissions } from "@/hoc/withPermissions";
 interface User {
   id: number;
   username: string;
@@ -19,7 +19,11 @@ interface User {
   authorization_rank: number;
 }
 
-export default function UserDetailPage() {
+
+
+export default withPermissions(UserDetailPage, ["see:user_details"]);
+
+function UserDetailPage() {
   const { id } = useParams();
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
@@ -79,20 +83,20 @@ export default function UserDetailPage() {
 
   if (error && !currentUser) {
     return (
-      <Card>
+      <PermissionsCard>
         <Alert type="error" message={error} />
         <div className="mt-4">
           <PermissionButton variant="secondary" onClick={() => router.push("/users")}>
             Kullanıcılar Sayfasına Dön
           </PermissionButton>
         </div>
-      </Card>
+      </PermissionsCard>
     );
   }
 
   if (isEditMode && currentUser) {
     return (
-      <Card title="Kullanıcı Düzenle">
+      <PermissionsCard title="Kullanıcı Düzenle">
         <UserForm 
           initialData={currentUser} 
           isEditing={true} 
@@ -101,12 +105,12 @@ export default function UserDetailPage() {
             fetchUser();
           }} 
         />
-      </Card>
+      </PermissionsCard>
     );
   }
 
   return (
-    <Card
+    <PermissionsCard
       permissionsRequired={['see:user_details']} 
       title="Kullanıcı Detayları" 
       actions={
@@ -180,6 +184,6 @@ export default function UserDetailPage() {
           </div>
         </div>
       )}
-    </Card>
+    </PermissionsCard>
   );
 }

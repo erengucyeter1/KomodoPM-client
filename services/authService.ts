@@ -2,7 +2,7 @@ import axiosInstance from '@/utils/axios';
 import { User } from '@/types/UserInterface';
 import { JwtPayload } from '@/types/auth';
 
-const TOKEN_KEY = 'authToken';
+const TOKEN_KEY = 'token';
 
 /**
  * Parses a JWT string to extract its payload.
@@ -119,6 +119,5 @@ export const authService = {
   logout,
   getToken,
   getCurrentUser,
-  // parseJwt and storeToken are not exported as they are internal helpers here
-  // removeToken is also internal, used by logout and getCurrentUser
+
 }; 

@@ -155,7 +155,7 @@ export default function TrailerForm({ initialData, onSubmit, onCancel }: Trailer
       
       <div className="flex justify-end space-x-3 pt-4">
         <PermissionButton
-          variant="outlined"
+          variant="secondary"
           onClick={onCancel}
           disabled={loading}
         >

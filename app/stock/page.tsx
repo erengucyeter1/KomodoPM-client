@@ -22,19 +22,19 @@ import {
   TableCell 
 } from "@/components/ui/table";
 import Papa from 'papaparse';
+import { withPermissions } from "@/hoc/withPermissions";
+import PermissionsCard from "@/components/ui/card/Card";
 
-const StockPage = () => {
-  const [stockCode, setStockCode] = useState('');
-  const [measurementUnit, setMeasurementUnit] = useState('ADET');
-  const [description, setDescription] = useState('');
+
+export default withPermissions(StockPage, ["see:stock"]);
+
+
+function StockPage() {
+
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [successMessage, setSuccessMessage] = useState('');
   const [generatingQr, setGeneratingQr] = useState(false);
-  const [uploadingCsv, setUploadingCsv] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const fileInputRef = useRef(null);
+ 
   const [pagination, setPagination] = useState({
     pageIndex: 0,
     pageSize: 25,
@@ -43,6 +43,17 @@ const StockPage = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [globalFilter, setGlobalFilter] = useState('');
   const [columnFilters, setColumnFilters] = useState([]);
+
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [stockCode, setStockCode] = useState('');
+  const [measurementUnit, setMeasurementUnit] = useState('ADET');
+  const [description, setDescription] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [uploadingCsv, setUploadingCsv] = useState(false);
+  const fileInputRef = useRef(null);
+
+
 
   // ...column helper ve columns tanımları aynen korunuyor
 
@@ -131,6 +142,8 @@ const StockPage = () => {
       if (globalFilter) {
         params.append('filter', globalFilter);
       }
+      params.append("isServiceOnly", "false");
+      params.append("balanceGreaterThan", "0");
       const response = await axios.get(`/stock?${params.toString()}`);
       setData(response.data.items);
       setTotalCount(response.data.meta.totalItems);
@@ -142,27 +155,6 @@ const StockPage = () => {
     }
   };
 
-  const handleSubmit = async (e) => {
-    // ...handleSubmit fonksiyonu aynen korunuyor
-    e.preventDefault();
-    try {
-      await axios.post('/stock', {
-        stockCode,
-        mesurementUnit: measurementUnit,
-        description,
-      });
-      setStockCode('');
-      setMeasurementUnit('ADET');
-      setDescription('');
-      setSuccessMessage('Stok öğesi başarıyla eklendi!');
-      setTimeout(() => setSuccessMessage(''), 3000);
-      fetchStocks();
-    } catch (err) {
-      console.error('Error creating stock item:', err);
-      setError('Stok öğesi eklenirken bir hata oluştu.');
-      setTimeout(() => setError(null), 3000);
-    }
-  };
 
   const generateQrCode = async (stockCode, mesurementUnit) => {
     // ...generateQrCode fonksiyonu aynen korunuyor
@@ -199,7 +191,32 @@ const StockPage = () => {
     }
   };
 
-  // CSV yükleme fonksiyonu
+    
+  const handleSubmit = async (e) => {
+    // ...handleSubmit fonksiyonu aynen korunuyor
+    e.preventDefault();
+    try {
+      await axios.post('/stock', {
+        stockCode,
+        mesurementUnit: measurementUnit,
+        description,
+      });
+      setStockCode('');
+      setMeasurementUnit('ADET');
+      setDescription('');
+      setSuccessMessage('Stok öğesi başarıyla eklendi!');
+      setTimeout(() => setSuccessMessage(''), 3000);
+      fetchStocks();
+
+    } catch (err) {
+      console.error('Error creating stock item:', err);
+      setError('Stok öğesi eklenirken bir hata oluştu.');
+      setTimeout(() => setError(null), 3000);
+    }
+  };
+
+
+   // CSV yükleme fonksiyonu
   // CSV yükleme fonksiyonu
 const handleCsvUpload = (event) => {
     const file = event.target.files[0];
@@ -281,10 +298,12 @@ const handleCsvUpload = (event) => {
     });
   };
 
+ 
+
   return (
     <div className="container mx-auto p-6">
       <h1 className="text-2xl font-bold mb-6">Stok Yönetimi</h1>
-      
+
       {successMessage && (
         <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
           {successMessage}
@@ -296,7 +315,7 @@ const handleCsvUpload = (event) => {
           {error}
         </div>
       )}
-      
+      <PermissionsCard permissionsRequired={["create:stock"]}  >
       <div className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-6">
         <h2 className="text-xl font-semibold mb-4">Yeni Stok Öğesi Ekle</h2>
         <form onSubmit={handleSubmit}>
@@ -394,6 +413,8 @@ const handleCsvUpload = (event) => {
           </div>
         </form>
       </div>
+      </PermissionsCard>
+      
       
       {/* Stok Listesi bölümü aynen korunuyor */}
       <div className="bg-white shadow-md rounded px-8 pt-6 pb-8">
@@ -531,4 +552,3 @@ const handleCsvUpload = (event) => {
   );
 };
 
-export default StockPage;

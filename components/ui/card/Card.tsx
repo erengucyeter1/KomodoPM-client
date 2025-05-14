@@ -11,7 +11,7 @@ interface CardProps extends PermissionProps {
   actions?: React.ReactNode;
 }
 
-export default function Card({ 
+export default function PermissionsCard({ 
   children, 
   title, 
   subtitle, 

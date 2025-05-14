@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import axiosInstance from "@/utils/axios";
 import PermissionButton from "@/components/ui/button/Button";
-import Card from "@/components/ui/card/Card";
+import PermissionsCard from "@/components/ui/card/Card";
 import DataTable from "@/components/ui/table/DataTable";
 import Alert from "@/components/ui/feedback/Alert";
 import Loading from "@/components/ui/feedback/Loading";
@@ -97,7 +97,7 @@ function PartnersPage() {
 
   return (
     <div className="container mx-auto p-4">
-      <Card 
+      <PermissionsCard 
         title="Müşteri ve Tedarikçiler" 
         actions={
           <PermissionButton 
@@ -137,7 +137,7 @@ function PartnersPage() {
             emptyMessage="Kayıtlı müşteri/tedarikçi bulunamadı."
           />
         )}
-      </Card>
+      </PermissionsCard>
     </div>
   );
 }

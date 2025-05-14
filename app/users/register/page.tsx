@@ -1,11 +1,15 @@
 "use client";
 
 import { useAuth } from "@/hooks/useAuth";
-import Card from "@/components/ui/card/Card";
+import PermissionsCard from "@/components/ui/card/Card";
 import UserForm from "@/components/features/users/UserForm";
 import Loading from "@/components/ui/feedback/Loading";
+import { withPermissions } from "@/hoc/withPermissions";
 
-export default function RegisterUserPage() {
+export default withPermissions(RegisterUserPage, ["create:user"]);
+
+
+function RegisterUserPage() {
   const { user,loading } = useAuth();
 
   if (loading) {
@@ -13,12 +17,12 @@ export default function RegisterUserPage() {
   }
 
   return (
-    <Card 
-      permissionsRequired={['add:user']}
+    <PermissionsCard 
+      permissionsRequired={['create:user']}
       title="Yeni Kullanıcı Tanımla" 
       subtitle="Komodo Proje Yönetim Sistemine yeni kullanıcı ekleyin"
     >
-      <UserForm permissionsRequired={['add:user']} />
-    </Card>
+      <UserForm permissionsRequired={['create:user']} />
+    </PermissionsCard>
   );
 }

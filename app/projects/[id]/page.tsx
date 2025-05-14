@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import axiosInstance from "@/utils/axios";
-import Card from "@/components/ui/card/Card";
+import PermissionsCard from "@/components/ui/card/Card";
 import PermissionButton from "@/components/ui/button/Button";
 import Alert from "@/components/ui/feedback/Alert";
 import Loading from "@/components/ui/feedback/Loading";
@@ -291,7 +291,7 @@ function ProjectDetailPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left column - Image and basic details */}
         <div className="lg:col-span-1">
-          <Card>
+          <PermissionsCard>
             <div className="space-y-6">
               {/* Project image */}
               <div className="h-64 rounded overflow-hidden bg-gray-100 flex items-center justify-center">
@@ -358,14 +358,14 @@ function ProjectDetailPage() {
                 </div>
               </div>
             </div>
-          </Card>
+          </PermissionsCard>
         </div>
 
         {/* Right column - Budget, expenses and description */}
         <div className="lg:col-span-2">
           <div className="space-y-6">
             {/* Budget and expenses summary */}
-            <Card>
+            <PermissionsCard>
               <h2 className="text-xl font-bold mb-6">Bütçe ve Gider Özeti</h2>
 
               <div className="grid grid-cols-2 gap-6">
@@ -411,18 +411,18 @@ function ProjectDetailPage() {
                   ></div>
                 </div>
               </div>
-            </Card>
+            </PermissionsCard>
 
             {/* Project description */}
             {project.description && (
-              <Card>
+              <PermissionsCard>
                 <h2 className="text-xl font-bold mb-4">Proje Açıklaması</h2>
                 <p className="whitespace-pre-wrap">{project.description}</p>
-              </Card>
+              </PermissionsCard>
             )}
 
             {/* Project metadata */}
-            <Card>
+            <PermissionsCard>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                 <div>
                   <h3 className="text-sm font-medium text-gray-500 mb-1">Proje Sorumlusu</h3>
@@ -445,13 +445,13 @@ function ProjectDetailPage() {
                   </p>
                 </div>
               </div>
-            </Card>
+            </PermissionsCard>
           </div>
         </div>
       </div>
 
       {/* Project Expenses Section */}
-      <Card>
+      <PermissionsCard>
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold">Proje Giderleri</h2>
           <Link href={`/projects/${projectId}/newExpense`}>
@@ -516,7 +516,7 @@ function ProjectDetailPage() {
             </table>
           </div>
         )}
-      </Card>
+      </PermissionsCard>
     </div>
   );
 }

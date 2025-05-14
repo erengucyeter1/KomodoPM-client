@@ -7,12 +7,13 @@
 import { useState, useEffect, useRef } from "react";
 import axiosInstance from "@/utils/axios";
 import { useAuth } from "@/hooks/useAuth";
-import Card from "@/components/ui/card/Card";
+import PermissionsCard from "@/components/ui/card/Card";
 import PermissionButton from "@/components/ui/button/Button";
 import Alert from "@/components/ui/feedback/Alert";
 import Loading from "@/components/ui/feedback/Loading";
 import TextInput from "@/components/ui/form/TextInput";
 import {usePermissions} from "@/hooks/usePermissions";
+import { withPermissions } from "@/hoc/withPermissions";
 
 // Tip tanımlamaları
 interface Role {
@@ -32,7 +33,9 @@ interface EditedRole extends Role {
   selectedPermissions: number[];
 }
 
-export default function RolesPage() {
+export default withPermissions(RolesPage, ["see:roles"]);
+
+function RolesPage() {
 
   usePermissions(['see:roles']);
 
@@ -284,7 +287,7 @@ export default function RolesPage() {
   }
 
   return (
-    <Card 
+    <PermissionsCard 
       title="Kullanıcı Rolleri" 
       actions={
         <PermissionButton 
@@ -593,6 +596,6 @@ export default function RolesPage() {
           </table>
         </div>
       )}
-    </Card>
+    </PermissionsCard>
   );
 }

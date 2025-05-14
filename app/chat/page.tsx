@@ -3,7 +3,7 @@
 import UsersList from '@/components/features/chat/UsersList';
 import ChatPanel from '@/components/features/chat/ChatPanel';
 import EmptyStatePanel from '@/components/features/chat/EmptyStatePanel';
-import Card from '@/components/ui/card/Card';
+import PermissionsCard from '@/components/ui/card/Card';
 import { useChatService } from '@/hooks/useChatService';
 import Loading from '@/components/ui/feedback/Loading';
 import { withPermissions } from '@/hoc/withPermissions';
@@ -29,7 +29,7 @@ function ChatPage() {
 
 
   return (
-    <Card className="h-[calc(100vh-12rem)] p-0 overflow-hidden">
+    <PermissionsCard className="h-[calc(100vh-12rem)] p-0 overflow-hidden">
       <div className="flex h-full">
         {/* Sol Sütun - Kullanıcı Listesi */}
         <div className="w-1/3 border-r border-gray-200 h-full">
@@ -55,6 +55,6 @@ function ChatPage() {
           )}
         </div>
       </div>
-    </Card>
+    </PermissionsCard>
   );
 }

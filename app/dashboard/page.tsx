@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
-import Card from "@/components/ui/card/Card";
+import PermissionsCard from "@/components/ui/card/Card";
 import Loading from "@/components/ui/feedback/Loading";
 import PermissionButton from "@/components/ui/button/Button";
 import Link from "next/link";
@@ -55,14 +55,14 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <Card title={`Hoş Geldiniz, ${user?.name}`}>
+      <PermissionsCard title={`Hoş Geldiniz, ${user?.name}`}>
         <p className="text-gray-600">
           Komodo Proje Yönetim Sistemine hoş geldiniz. Aşağıda özet bilgileri ve hızlı erişim bağlantılarını bulabilirsiniz.
         </p>
-      </Card>
+      </PermissionsCard>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-blue-50 border-l-4 border-blue-500">
+        <PermissionsCard className="bg-blue-50 border-l-4 border-blue-500">
           <div className="flex items-center">
             <div className="p-3 rounded-full bg-blue-500 text-white mr-4">
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -74,9 +74,9 @@ export default function DashboardPage() {
               <p className="text-2xl font-bold">{stats?.totalUsers || 0}</p>
             </div>
           </div>
-        </Card>
+        </PermissionsCard>
 
-        <Card className="bg-green-50 border-l-4 border-green-500">
+        <PermissionsCard className="bg-green-50 border-l-4 border-green-500">
           <div className="flex items-center">
             <div className="p-3 rounded-full bg-green-500 text-white mr-4">
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -88,9 +88,9 @@ export default function DashboardPage() {
               <p className="text-2xl font-bold">{stats?.totalProjects || 0}</p>
             </div>
           </div>
-        </Card>
+        </PermissionsCard>
 
-        <Card className="bg-yellow-50 border-l-4 border-yellow-500">
+        <PermissionsCard className="bg-yellow-50 border-l-4 border-yellow-500">
           <div className="flex items-center">
             <div className="p-3 rounded-full bg-yellow-500 text-white mr-4">
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -102,11 +102,11 @@ export default function DashboardPage() {
               <p className="text-2xl font-bold">{stats?.activeProjects || 0}</p>
             </div>
           </div>
-        </Card>
+        </PermissionsCard>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card title="Hızlı Erişim">
+        <PermissionsCard title="Hızlı Erişim">
           <div className="space-y-2">
             <Link href="/users">
               <PermissionButton variant="secondary" permissionsRequired={['see:users']} className="w-full mb-2">
@@ -119,14 +119,14 @@ export default function DashboardPage() {
               </PermissionButton>
             </Link>
             <Link href="/users/register">
-              <PermissionButton variant="primary" permissionsRequired={['add:user']} className="w-full">
+              <PermissionButton variant="primary" permissionsRequired={['create:user']} className="w-full">
                 Yeni Kullanıcı Ekle
               </PermissionButton>
             </Link>
           </div>
-        </Card>
+        </PermissionsCard>
 
-        <Card title="Son Aktiviteler">
+        <PermissionsCard title="Son Aktiviteler">
           {/* Buraya son aktiviteler eklenebilir */}
           <div className="space-y-3">
             <div className="flex items-center p-2 hover:bg-gray-50 rounded">
@@ -159,7 +159,7 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
-        </Card>
+        </PermissionsCard>
       </div>
     </div>
   );

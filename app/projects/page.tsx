@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import axiosInstance from "@/utils/axios";
 import { useAuth } from "@/hooks/useAuth";
-import Card from "@/components/ui/card/Card";
+import PermissionsCard from "@/components/ui/card/Card";
 import PermissionButton from "@/components/ui/button/Button";
 import Alert from "@/components/ui/feedback/Alert";
 import Loading from "@/components/ui/feedback/Loading";
@@ -147,7 +147,7 @@ export default function ProjectsPage() {
 
   return (
     <div className="space-y-6">
-      <Card 
+      <PermissionsCard 
         title="Projeler" 
         actions={
           <Link href="/projects/create">
@@ -158,7 +158,7 @@ export default function ProjectsPage() {
         }
       >
         {error && <Alert type="error" message={error} className="mb-4" />}
-      </Card>
+      </PermissionsCard>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {projects.map((project, index) => {
@@ -172,7 +172,7 @@ export default function ProjectsPage() {
               className="cursor-pointer h-full"
               onClick={() => window.location.href = `/projects/${project.id}`}
             >
-              <Card className="hover:shadow-md transition-shadow duration-200 h-full flex flex-col">
+              <PermissionsCard className="hover:shadow-md transition-shadow duration-200 h-full flex flex-col">
                 {/* Image Section - Top of Card */}
                 <div className="h-48 mb-4 overflow-hidden rounded bg-gray-100 relative">
                   {project.treyler_type && project.treyler_type.image_data ? (
@@ -241,7 +241,7 @@ export default function ProjectsPage() {
                     </div>
                   </div>
                 </div>
-              </Card>
+              </PermissionsCard>
             </div>
           );
         })}
@@ -253,7 +253,7 @@ export default function ProjectsPage() {
         )}
         
         {!isLoading && projects.length === 0 && (
-          <Card>
+          <PermissionsCard>
             <div className="py-12 flex flex-col items-center text-gray-500">
               <svg className="h-16 w-16 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -261,7 +261,7 @@ export default function ProjectsPage() {
               <p className="text-xl font-medium">Henüz proje bulunmamaktadır</p>
               <p className="mt-2">Yeni bir proje eklemek için "Yeni Proje" butonuna tıklayın</p>
             </div>
-          </Card>
+          </PermissionsCard>
         )}
         
         {!hasMore && projects.length > 0 && (

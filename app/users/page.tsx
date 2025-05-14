@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import axiosInstance from "@/utils/axios";
 import { useAuth } from "@/hooks/useAuth";
-import Card from "@/components/ui/card/Card";
+import PermissionsCard from "@/components/ui/card/Card";
 import PermissionButton from "@/components/ui/button/Button";
 import Alert from "@/components/ui/feedback/Alert";
 import UsersTable from "@/components/features/users/UsersTable";
@@ -73,7 +73,7 @@ export default function UsersPage() {
   };
 
   return (
-    <Card 
+    <PermissionsCard 
     permissionsRequired={['see:users']}
       title="Tüm Kullanıcılar" 
       actions={
@@ -81,7 +81,7 @@ export default function UsersPage() {
           <PermissionButton 
 
           startIcon="+"
-          permissionsRequired={['add:user']}
+          permissionsRequired={['create:user']}
 
           >
             Yeni Kullanıcı Ekle
@@ -98,6 +98,6 @@ export default function UsersPage() {
         onUserUpdate={handleUserUpdate}
         permissionsRequired={['see:users']}
       />
-    </Card>
+    </PermissionsCard>
   );
 }

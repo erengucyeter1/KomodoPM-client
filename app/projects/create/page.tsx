@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from 'next/navigation';
-import Card from "@/components/ui/card/Card";
+import PermissionsCard from "@/components/ui/card/Card";
 import PermissionButton from "@/components/ui/button/Button";
 import Alert from "@/components/ui/feedback/Alert";
 import Loading from "@/components/ui/feedback/Loading";
@@ -146,7 +146,7 @@ function CreateProjectPage() {
 
   return (
     <div className="space-y-6">
-      <Card title="Yeni Proje Oluştur">
+      <PermissionsCard title="Yeni Proje Oluştur">
         {error && <Alert type="error" message={error} className="mb-4" />}
         {success && <Alert type="success" message="Proje başarıyla oluşturuldu. Projeler sayfasına yönlendiriliyorsunuz..." className="mb-4" />}
         
@@ -328,7 +328,7 @@ function CreateProjectPage() {
             </PermissionButton>
           </div>
         </form>
-      </Card>
+      </PermissionsCard>
     </div>
   );
 }

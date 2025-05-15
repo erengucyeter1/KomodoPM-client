@@ -40,7 +40,7 @@ export function useChatService() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axiosInstance.get('/users');
+        const response = await axiosInstance.get('/users/chat');
         // Kendimizi listeden çıkaralım
         const filteredUsers = response.data.filter(
           (user: any) => user.id !== currentUser?.id

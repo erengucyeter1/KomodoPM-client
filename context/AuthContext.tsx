@@ -24,8 +24,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setIsLoading(true);
       try {
         const currentUser = authService.getCurrentUser();
-        if (currentUser) {
+        if (currentUser && !authService.isTokenExpired()) {
+
           setUser(currentUser);
+        }else{
+          authService.logout();
+          router.push('/auth/login');
         }
       } catch (error) {
         console.error("Error loading current user:", error);

@@ -114,10 +114,22 @@ const getCurrentUser = (): User | null => {
   return null;
 };
 
+const isTokenExpired = (): boolean => {
+  const token = getToken();
+  if (!token) return true;
+  const decodedPayload = parseJwt(token);
+  if (decodedPayload && decodedPayload.exp && decodedPayload.exp * 1000 > Date.now()) {
+    return false;
+  }
+  return true;
+};
+
+
 export const authService = {
   login,
   logout,
   getToken,
   getCurrentUser,
+  isTokenExpired,
 
 }; 

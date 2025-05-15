@@ -197,6 +197,7 @@ function RolesPage() {
       setEditingRoleId(null);
       setEditedRole(null);
       setError("");
+      fetchRolesAndPermissions(); // Re-fetch data to refresh the table
     } catch (error: any) {
       console.error("Error updating role:", error);
       setError(`Rol güncellenirken bir hata oluştu: ${error.message || "Bilinmeyen hata"}`);
@@ -245,6 +246,7 @@ function RolesPage() {
         selectedPermissions: []
       });
       setError("");
+      fetchRolesAndPermissions(); // Re-fetch data to refresh the table
     } catch (error: any) {
       console.error("Error adding role:", error);
       setError(`Rol eklenirken bir hata oluştu: ${error.message || "Bilinmeyen hata"}`);

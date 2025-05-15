@@ -15,6 +15,7 @@ export default function TrailerForm({ initialData, onSubmit, onCancel }: Trailer
     name: "",
     description: "",
     imageData: "",
+    class: "",
     contentType: "image/jpeg"
   });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -27,6 +28,7 @@ export default function TrailerForm({ initialData, onSubmit, onCancel }: Trailer
         name: initialData.name || "",
         description: initialData.description || "",
         imageData: "",
+        class: initialData?.class || "",
         contentType: initialData.image_content_type || "image/jpeg"
       });
       
@@ -37,10 +39,13 @@ export default function TrailerForm({ initialData, onSubmit, onCancel }: Trailer
     }
   }, [initialData]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
+  
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -107,6 +112,27 @@ export default function TrailerForm({ initialData, onSubmit, onCancel }: Trailer
           placeholder="Römork adını giriniz"
           required
         />
+      </div>
+
+      <div>
+        <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+          Römork Sınıfı
+        </label>
+        <select
+              id="class"
+              name="class"
+              value={formData.class}
+              onChange={handleChange}
+              className="block w-full rounded-md border border-gray-300 shadow-sm py-2 px-3 focus:outline-none focus:ring-[#063554] focus:border-[#063554]"
+              required
+            >
+              <option value="">Römork sınıfını seçiniz</option>
+              <option value="LOWBED">LOWBED</option>
+              <option value="LOWLOADER">LOWLOADER</option>
+              <option value="FLATBED">FLATBED</option>
+              <option value="SPECIAL">SPECIAL</option>
+          </select>
+
       </div>
       
       <div>

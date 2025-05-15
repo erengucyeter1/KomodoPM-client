@@ -53,6 +53,10 @@ function CreateProjectPage() {
   // Yeni state değişkenleri
   const [models, setModels] = useState<TrailerModel[]>([]);
   const [loadingModels, setLoadingModels] = useState(true);
+
+  // trailer class
+  const [trailerClass, setTrailerClass] = useState<string>("");
+
   
   const { register, handleSubmit, watch, formState: { errors } } = useForm<ProjectFormData>({
     defaultValues: {
@@ -69,7 +73,7 @@ function CreateProjectPage() {
     const fetchTrailerModels = async () => {
       try {
         setLoadingModels(true);
-        const response = await axiosInstance.get('/trailers');
+        const response = await axiosInstance.get('/trailers?classFilter=' + trailerClass);
         setModels(response.data);
       } catch (err) {
         console.error("Römork modelleri çekilirken bir hata oluştu:", err);
@@ -80,7 +84,7 @@ function CreateProjectPage() {
     };
 
     fetchTrailerModels();
-  }, []);
+  }, [trailerClass]);
   
   const watchModelId = watch("model_id");
   
@@ -152,8 +156,8 @@ function CreateProjectPage() {
         
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
           {/* Project Basic Information */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Proje Adı
@@ -213,7 +217,7 @@ function CreateProjectPage() {
             </div>
             
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Başlangıç Tarihi
@@ -255,10 +259,32 @@ function CreateProjectPage() {
                 </select>
                 {errors.status && <p className="mt-1 text-sm text-red-600">{errors.status.message}</p>}
               </div>
-              
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Araç Modeli
+              <div className="grid gap-3">
+
+                <div>
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                    Römork Sınıfı
+                  </label>
+                  <select
+                        id="class"
+                        name="class"
+                        value={trailerClass}
+                        onChange={(e) => setTrailerClass(e.target.value)}
+                        className="block w-full rounded-md border border-gray-300 shadow-sm py-2 px-3 focus:outline-none focus:ring-[#063554] focus:border-[#063554]"
+                        required
+                      >
+                        <option value="">Tümü</option>
+                        <option value="LOWBED">LOWBED</option>
+                        <option value="LOWLOADER">LOWLOADER</option>
+                        <option value="FLATBED">FLATBED</option>
+                        <option value="SPECIAL">SPECIAL</option>
+                    </select>
+
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Araç Modeli
                 </label>
                 <select
                   className={`block w-full rounded-md border ${errors.model_id ? 'border-red-300' : 'border-gray-300'} shadow-sm py-2 px-3 focus:outline-none focus:ring-[#063554] focus:border-[#063554]`}
@@ -280,6 +306,8 @@ function CreateProjectPage() {
                   )}
                 </select>
                 {errors.model_id && <p className="mt-1 text-sm text-red-600">{errors.model_id.message}</p>}
+                </div>
+                </div>
               </div>
             </div>
           </div>

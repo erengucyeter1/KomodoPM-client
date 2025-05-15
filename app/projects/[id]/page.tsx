@@ -37,6 +37,7 @@ import {
 import { Input } from "@/components/ui/input"; // Assuming you have this
 import { Label } from "@/components/ui/label"; // Assuming you have this
 import { Button } from "@/components/ui/button";
+import { useChatService } from "@/hooks/useChatService";
 
 // Type definitions
 interface TrailerType {
@@ -121,8 +122,7 @@ function ProjectDetailPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
   // State for rank warning
-  const [showRankWarningModal, setShowRankWarningModal] = useState(false);
-  const [rankWarningMessage, setRankWarningMessage] = useState("");
+  const [isPermissionRequired, setIsPermissionRequired] = useState(false);
 
   // Helper function to format status
   const getStatusInfo = (status: string) => {
@@ -302,12 +302,8 @@ function ProjectDetailPage() {
       // Use processedExpense.user for rank check
       if (processedExpense.user && typeof processedExpense.user.authorization_rank === 'number') {
         if (processedExpense.user.authorization_rank > activeUser.authorization_rank) {
-          setRankWarningMessage(
-            `Bu gider ${processedExpense.user.name || 'bir kullanıcı'} (${processedExpense.user.username}) tarafından gerçekleştirilmiş. Yapacağınız işlem gerçekleşmeden önce bu kişinin onayına gidecektir.`
-          );
-          setShowRankWarningModal(true);
+          setIsPermissionRequired(true);
           setIsLoading(false);
-          return; 
         }
       } else {
         console.warn("Gideri oluşturan kullanıcı veya yetki bilgisi eksik. Düzenlemeye izin veriliyor.", processedExpense);
@@ -315,7 +311,6 @@ function ProjectDetailPage() {
 
       setEditedQuantity(processedExpense.quantity); // quantity is now definitely string
       setIsEditModalOpen(true);
-      setShowRankWarningModal(false); // Ensure rank warning is hidden if we proceed
       
     } catch (err: any) {
       console.error("Error fetching expense for edit:", err);
@@ -332,6 +327,12 @@ function ProjectDetailPage() {
   };
 
   const handleSaveQuantity = async () => {
+
+    if(!activeUser){
+      setError("İşlem için kullanıcı yetkisi doğrulanamadı.");
+      return;
+    }
+    
     if (!selectedExpenseForEdit || editedQuantity === "") return;
     
     const newQuantityNum = parseFloat(editedQuantity);
@@ -348,9 +349,6 @@ function ProjectDetailPage() {
       setError(`Miktar, (stok: ${productOriginalBalanceNum} + eski gider: ${originalQuantityNum}) = ${maxAllowedQuantity} ${selectedExpenseForEdit.product?.measurement_unit || ''} değerinden fazla olamaz.`);
       return;
     }
-
-    console.log(`Saving new quantity for expense ${selectedExpenseForEdit.id}: ${newQuantityNum}`);
-    alert(`Placeholder: Miktar güncellenecek: ${newQuantityNum}. Backend entegrasyonu yapılacak.`);
     
     const updatedExpenseList = projectExpenses.map(exp =>
       exp.id === selectedExpenseForEdit.id ? { ...exp, quantity: newQuantityNum.toString() } : exp
@@ -358,6 +356,41 @@ function ProjectDetailPage() {
     setProjectExpenses(updatedExpenseList);
     
     setSelectedExpenseForEdit(prev => prev ? { ...prev, quantity: newQuantityNum.toString() } : null);
+
+    if(isPermissionRequired) {
+
+      // isteği veri tabanına kaydet              
+      const response = await axiosInstance.post('/permission-requests', {
+        project_expense_id: selectedExpenseForEdit.id,
+        old_quantity: parseFloat(selectedExpenseForEdit.quantity),
+        new_quantity: parseFloat(newQuantityNum.toString()),
+        applicant_id: activeUser.id,
+        expense_creator_id: selectedExpenseForEdit.creator_id,
+      });
+
+      console.log("Permission request response:", response);
+
+      // check response status
+
+
+      // mesaj gönder
+      useChatService().sendMessage(
+      `Değişiklik talebi: ${selectedExpenseForEdit.project_id} projesi, ${selectedExpenseForEdit.id} numaralı gider için ${selectedExpenseForEdit.quantity} → ${newQuantityNum.toString()}`, 
+      'permission_request', 
+      {
+        projectNumber: selectedExpenseForEdit.project_id,
+        expenseNumber: selectedExpenseForEdit.id,
+        oldAmount: parseFloat(selectedExpenseForEdit.quantity),
+        newAmount: parseFloat(newQuantityNum.toString()),
+        status: 'pending'
+      })
+      
+      return;
+    }else
+    {
+
+      //handle save quantity
+    }
     closeEditModal();
   };
 
@@ -722,7 +755,12 @@ function ProjectDetailPage() {
       <Dialog open={isEditModalOpen} onOpenChange={(isOpen) => { if (!isOpen) closeEditModal(); else setIsEditModalOpen(true);}}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Gider Miktarını Düzenle</DialogTitle>
+            {isPermissionRequired ? (
+              <DialogTitle className="text-red-600">! Düzenleme için onay gerekiyor !</DialogTitle>
+            ) : (
+              <DialogTitle>Gider Miktarını Düzenle</DialogTitle>
+            )}
+            
             {selectedExpenseForEdit && (
               <DialogDescription>
                 Ürün: {selectedExpenseForEdit.product?.description || selectedExpenseForEdit.product_code || 'Detay Yok'}
@@ -765,7 +803,7 @@ function ProjectDetailPage() {
                 </Button>
               </DialogClose>
               <Button type="button" onClick={handleSaveQuantity}> 
-                Kaydet
+                {isPermissionRequired ? "İstek Gönder" : "Kaydet"}
               </Button>
             </div>
           </DialogFooter>
@@ -793,20 +831,7 @@ function ProjectDetailPage() {
         </AlertDialogContent>
       </AlertDialog>
       
-      {/* Rank Warning Modal/Alert Dialog */}
-      <AlertDialog open={showRankWarningModal} onOpenChange={setShowRankWarningModal}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Onay Gerekiyor</AlertDialogTitle>
-            <AlertDialogDescription>
-              {rankWarningMessage}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogAction onClick={() => setShowRankWarningModal(false)}>Anladım</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+     
     </div>
   );
 }

@@ -38,6 +38,7 @@ import { Input } from "@/components/ui/input"; // Assuming you have this
 import { Label } from "@/components/ui/label"; // Assuming you have this
 import { Button } from "@/components/ui/button";
 import { useChatService } from "@/hooks/useChatService";
+import { useDirectMessageSender } from "@/hooks/useDirectMessage";
 
 // Type definitions
 interface TrailerType {
@@ -112,7 +113,7 @@ function ProjectDetailPage() {
   const [project, setProject] = useState<Project | null>(null);
   const [projectExpenses, setProjectExpenses] = useState<ProjectExpense[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const [isDownloadingReport, setIsDownloadingReport] = useState(false);
 
   // State for the edit/delete modal
@@ -124,7 +125,9 @@ function ProjectDetailPage() {
   // State for rank warning
   const [isPermissionRequired, setIsPermissionRequired] = useState(false);
 
-  const {sendMessage, setSelectedUser} = useChatService();
+  //const {sendMessage, setSelectedUser} = useChatService();
+
+  const { sendMessage, isConnected } = useDirectMessageSender();
 
   // Helper function to format status
   const getStatusInfo = (status: string) => {
@@ -142,7 +145,7 @@ function ProjectDetailPage() {
     const fetchProject = async () => {
       try {
         setIsLoading(true);
-        setError("");
+        setError(null);
 
         const response = await axiosInstance.get(`/projects/${projectId}`);
         setProject(response.data);
@@ -182,7 +185,7 @@ function ProjectDetailPage() {
 
   const handleDownloadReport = async () => {
     setIsDownloadingReport(true);
-    setError(""); // Önceki hataları temizle
+    setError(null); // Önceki hataları temizle
 
     try {
       const response = await axiosInstance.get(
@@ -273,7 +276,7 @@ function ProjectDetailPage() {
   const handleOpenExpenseModal = async (expenseId: string) => {
     try {
       setIsLoading(true); 
-      setError("");
+      setError(null);
       const response = await axiosInstance.get<ProjectExpense>(`/project-expense/${expenseId}`);
       const fetchedExpense = response.data;
       console.log("Fetched Expense for Edit:", fetchedExpense);
@@ -370,25 +373,28 @@ function ProjectDetailPage() {
         expense_creator_id: selectedExpenseForEdit.creator_id,
       });
 
-      console.log("Permission request response:", response);
+      if(response.status === 201 && (response.data.success === true || response.data.success === "true")){
+        sendMessage({
 
-      // check response status
+          recipientId: Number(selectedExpenseForEdit.creator_id),
+          content: `Değişiklik talebi: ${selectedExpenseForEdit.project_id} projesi, ${selectedExpenseForEdit.id} numaralı gider için ${selectedExpenseForEdit.quantity} → ${newQuantityNum.toString()}`,
+          message_type: 'permission_request',
+          metadata: {
+            attemptId: response.data.data.id,
+            projectNumber: selectedExpenseForEdit.project_id,
+            expenseNumber: selectedExpenseForEdit.id,
+            oldAmount: parseFloat(selectedExpenseForEdit.quantity),
+            newAmount: parseFloat(newQuantityNum.toString()),
+            status: 'pending'
+          }
+        });
 
+        
+        closeEditModal();
 
-      setSelectedUser({id : selectedExpenseForEdit.creator_id});
-      // mesaj gönder
-      sendMessage(
-      `Değişiklik talebi: ${selectedExpenseForEdit.project_id} projesi, ${selectedExpenseForEdit.id} numaralı gider için ${selectedExpenseForEdit.quantity} → ${newQuantityNum.toString()}`, 
-      'permission_request', 
-      {
-        projectNumber: selectedExpenseForEdit.project_id,
-        expenseNumber: selectedExpenseForEdit.id,
-        oldAmount: parseFloat(selectedExpenseForEdit.quantity),
-        newAmount: parseFloat(newQuantityNum.toString()),
-        status: 'pending'
-      })
-      
-      return;
+      }else{
+        setError(response.data.message || "İzin talebi gönderilirken bir hata oluştu.");
+      }    
     }else
     {
 
@@ -404,10 +410,7 @@ function ProjectDetailPage() {
         setError("Miktar güncellenirken bir hata oluştu.");
       }
 
-      
-
     }
-    closeEditModal();
   };
 
   const openDeleteConfirmation = () => {
@@ -446,7 +449,7 @@ function ProjectDetailPage() {
 
   const handleCompleteProject = async () => {
     try {
-        setError("");
+        setError(null);
         await axiosInstance.put(`/projects/${projectId}/complete`);
         // Optimistically update project status or re-fetch
         setProject(prev => prev ? { ...prev, status: 'completed' } : null);
@@ -768,9 +771,21 @@ function ProjectDetailPage() {
       </PermissionsCard>
 
       {/* Edit Expense Modal */}
+
+
+
+     
       <Dialog open={isEditModalOpen} onOpenChange={(isOpen) => { if (!isOpen) closeEditModal(); else setIsEditModalOpen(true);}}>
+       
         <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
+
+        <div className="flex flex-col text-center">
+
+          {error && 
+          <div className="text-red-600">
+        <h1 className="text-red-600">{error}</h1>
+        </div>}
+          {!error && <DialogHeader>
             {isPermissionRequired ? (
               <DialogTitle className="text-red-600">! Düzenleme için onay gerekiyor !</DialogTitle>
             ) : (
@@ -786,9 +801,12 @@ function ProjectDetailPage() {
                 Stoktaki Bakiye (Bu Gider Hariç): {selectedExpenseForEdit.product?.balance || "0"} {selectedExpenseForEdit.product?.measurement_unit}
               </DialogDescription>
             )}
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
+          </DialogHeader>}
+          </div>
+
+          {!error && <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
+
               <Label htmlFor="quantityInput" className="text-right col-span-1">
                 Yeni Miktar ({selectedExpenseForEdit?.product?.measurement_unit || ''})
               </Label>
@@ -807,20 +825,20 @@ function ProjectDetailPage() {
                 placeholder="Yeni miktar"
               />
             </div>
-          </div>
+          </div>}
           <DialogFooter className="sm:justify-between">
-            <Button variant="destructive" onClick={openDeleteConfirmation}>
+            {!error &&<Button variant="destructive" onClick={openDeleteConfirmation}>
               Gideri Sil
-            </Button>
+            </Button>}
             <div className="flex gap-2">
               <DialogClose asChild>
                 <Button type="button" variant="outline" onClick={closeEditModal}>
                   İptal
                 </Button>
               </DialogClose>
-              <Button type="button" onClick={handleSaveQuantity}> 
+              {!error && <Button type="button" onClick={handleSaveQuantity}> 
                 {isPermissionRequired ? "İstek Gönder" : "Kaydet"}
-              </Button>
+              </Button>}
             </div>
           </DialogFooter>
         </DialogContent>

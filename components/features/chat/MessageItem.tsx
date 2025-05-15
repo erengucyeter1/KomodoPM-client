@@ -16,10 +16,9 @@ export default function MessageItem({ message, currentUserId }: MessageItemProps
   if (message.message_type === 'permission_request') {
     return (
       <PermissionRequestMessage 
+        messageId={message.id}
         data={message.metadata}
         isOwnMessage={isOwnMessage}
-        onApprove={() => {/* handle approval */}}
-        onReject={() => {/* handle rejection */}}
       />
     );
   }

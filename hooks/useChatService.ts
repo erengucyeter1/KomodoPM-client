@@ -17,6 +17,7 @@ interface Message {
   isRead: boolean;
   message_type: 'text' | 'permission_request' | 'system';
   metadata?: {
+    attemptId?: number;
     projectNumber?: string;
     expenseNumber?: string;
     oldAmount?: number;

@@ -3,7 +3,7 @@ import PermissionRequestMessage from './PermissionRequestMessage';
 
 interface MessageItemProps {
   message: any;
-  currentUserId: number;
+  currentUserId: number |string;
 }
 
 export default function MessageItem({ message, currentUserId }: MessageItemProps) {

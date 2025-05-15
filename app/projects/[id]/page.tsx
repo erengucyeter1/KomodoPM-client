@@ -124,6 +124,8 @@ function ProjectDetailPage() {
   // State for rank warning
   const [isPermissionRequired, setIsPermissionRequired] = useState(false);
 
+  const {sendMessage, setSelectedUser} = useChatService();
+
   // Helper function to format status
   const getStatusInfo = (status: string) => {
     const statusMap: Record<string, { label: string; color: string; bgColor: string }> = {
@@ -373,8 +375,9 @@ function ProjectDetailPage() {
       // check response status
 
 
+      setSelectedUser({id : selectedExpenseForEdit.creator_id});
       // mesaj gönder
-      useChatService().sendMessage(
+      sendMessage(
       `Değişiklik talebi: ${selectedExpenseForEdit.project_id} projesi, ${selectedExpenseForEdit.id} numaralı gider için ${selectedExpenseForEdit.quantity} → ${newQuantityNum.toString()}`, 
       'permission_request', 
       {
@@ -389,7 +392,20 @@ function ProjectDetailPage() {
     }else
     {
 
-      //handle save quantity
+      // handle save quantity
+      const response = await axiosInstance.put(`/project-expense/${selectedExpenseForEdit.id}`, {
+        product_count: newQuantityNum.toString()
+      });
+
+      if(response.status === 200 && response.data.success){
+        console.log("Quantity updated response:", response);
+        setProjectExpenses(prev => prev.map(exp => exp.id === selectedExpenseForEdit.id ? { ...exp, quantity: newQuantityNum.toString() } : exp));
+      }else{
+        setError("Miktar güncellenirken bir hata oluştu.");
+      }
+
+      
+
     }
     closeEditModal();
   };

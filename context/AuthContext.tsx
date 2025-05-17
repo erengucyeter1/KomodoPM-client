@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import React, { createContext, useState, useEffect, ReactNode, useCallback, useContext, useMemo } from 'react';
 import { useRouter } from 'next/navigation'; // Or 'next/router' for older Next.js versions
 import { User } from '@/types/UserInterface';
 import { AuthContextType } from '@/types/auth';
@@ -15,19 +15,20 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const router = useRouter();
 
   // Effect to load user on initial mount
   useEffect(() => {
-    const attemptLoadUser = () => {
+    const attemptLoadUser = async () => {
       setIsLoading(true);
       try {
         const currentUser = authService.getCurrentUser();
         if (currentUser && !authService.isTokenExpired()) {
-
           setUser(currentUser);
-        }else{
+          setToken(authService.getToken());
+        } else {
           authService.logout();
           router.push('/auth/login');
         }
@@ -47,15 +48,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const loggedInUser = await authService.login(username, password);
       if (loggedInUser) {
         setUser(loggedInUser);
+        setToken(authService.getToken());
         setIsLoading(false);
         return true;
       }
       setUser(null); // Ensure user is null on failed login
+      setToken(null);
       setIsLoading(false);
       return false;
     } catch (error) {
       console.error('Login failed in AuthProvider:', error);
       setUser(null);
+      setToken(null);
       setIsLoading(false);
       return false;
     }
@@ -66,6 +70,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       await authService.logout();
       setUser(null);
+      setToken(null);
       // Redirect to login page after logout
       // Ensure router is available and correctly imported for your Next.js version
       router.push('/auth/login'); // Adjust path as needed
@@ -89,11 +94,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, [user, hasPermission]);
   
   const getToken = useCallback((): string | null => {
-    return authService.getToken();
-  }, []);
+    return token;
+  }, [token]);
 
-  const contextValue: AuthContextType = {
+  const contextValue = useMemo(() => ({
     user,
+    token,
     isLoading,
     isAuthenticated: !!user,
     login,
@@ -101,7 +107,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     hasPermission,
     isAdmin,
     getToken,
-  };
+  }), [user, token, isLoading, login, logout, hasPermission, isAdmin, getToken]);
 
   return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 }; 

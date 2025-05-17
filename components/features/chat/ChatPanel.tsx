@@ -2,20 +2,23 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import MessageItem from './MessageItem';
 import PermissionButton from "@/components/ui/button/Button";
+import Loading from '@/components/ui/feedback/Loading';
 
 
 interface ChatPanelProps {
   user: any;
   messages: any[];
   isConnected: boolean;
-  onSendMessage: (content: string, type: string, metadata?: any) => boolean;
+  onSendMessage: (content: string, type: 'text' | 'permission_request' | 'system', metadata?: any) => boolean;
+  isLoadingMessages?: boolean;
 }
 
 export default function ChatPanel({ 
   user, 
   messages, 
   isConnected,
-  onSendMessage 
+  onSendMessage,
+  isLoadingMessages
 }: ChatPanelProps) {
   const { user: currentUser } = useAuth();
   const [newMessage, setNewMessage] = useState('');
@@ -59,7 +62,12 @@ export default function ChatPanel({
       </div>
       
       {/* Mesaj Listesi */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3 flex flex-col">
+      <div className="flex-grow overflow-y-auto p-4 space-y-3 flex flex-col">
+        {isLoadingMessages && (
+          <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 z-10">
+            <Loading text="Mesajlar yükleniyor..." />
+          </div>
+        )}
         {messages.length === 0 ? (
           <div className="text-center text-gray-500 py-8">
             Henüz mesaj yok. Bir mesaj göndererek sohbeti başlatabilirsiniz.

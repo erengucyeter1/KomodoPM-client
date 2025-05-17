@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import PermissionLink from "@/components/ui/link/PermissionLink";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
+import { useSocket } from "@/context/SocketContext";
 
 interface MenuItem {
   title: string;
@@ -11,21 +12,35 @@ interface MenuItem {
   icon: React.ReactNode;
   requiredPermission?: number;
   permissions: string[];
+  condition?: boolean;
+  extra_component?: React.ReactNode;
 }
 
+
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+
+  const pathname = usePathname();
+
   const { user, logout } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
-  const pathname = usePathname();
+  const {hasNewMessages, clearNewMessageIndicator } = useSocket(); 
+
+  const handleChatLinkClick = () => {
+    // The indicator will be cleared when the chat page loads messages
+    // and calls clearNewMessageIndicator via useChatService.
+    // Or, you can clear it optimistically here if preferred:
+    if (hasNewMessages) {
+       clearNewMessageIndicator();
+     }
+  };
+
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  if (pathname.startsWith("/auth")) {
-    return <>{children}</>;
-  }
   const showNavbar = true;
   const showSidebar = true;
 
@@ -119,6 +134,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
         </svg>
       ),
+      condition: hasNewMessages,
+      extra_component:   <span className="absolute top-0 right-0 block h-2 w-2 rounded-full ring-2 ring-white bg-green-500"></span>      ,
       permissions: ['see:chat']
     },
     {
@@ -213,7 +230,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             : "text-white hover:bg-[#336383]"
                         } transition-colors rounded-md mx-2`}
                       >
-                        <div className="mr-3">{item.icon}</div>
+                        <div className="mr-3">
+                          {item.icon}
+                          {item.condition && item.extra_component}
+
+                        </div>
                         <span className={isSidebarOpen ? "block" : "hidden"}>
                           {item.title}
                         </span>

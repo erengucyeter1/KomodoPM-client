@@ -11,22 +11,20 @@ import { withPermissions } from '@/hoc/withPermissions';
 export default withPermissions(ChatPage, ['see:chat']);
 
 function ChatPage() {
-
-
   const { 
     users, 
     selectedUser, 
     setSelectedUser, 
     messages, 
-    isConnected, 
-    isLoading,
+    isSocketConnected,
+    isLoadingUsers,
+    isLoadingMessages,
     sendMessage
   } = useChatService();
 
-  if (isLoading) {
-    return <Loading text="Mesajlaşma hizmetine bağlanılıyor..." />;
+  if (isLoadingUsers || !isSocketConnected) {
+    return <Loading text={isLoadingUsers ? "Kullanıcılar yükleniyor..." : "Mesajlaşma hizmetine bağlanılıyor..."} />;
   }
-
 
   return (
     <PermissionsCard className="h-[calc(100vh-12rem)] p-0 overflow-hidden">
@@ -37,7 +35,7 @@ function ChatPage() {
             users={users} 
             selectedUser={selectedUser} 
             onSelectUser={setSelectedUser}
-            isConnected={isConnected}
+            isConnected={isSocketConnected}
           />
         </div>
         
@@ -47,8 +45,9 @@ function ChatPage() {
             <ChatPanel 
               user={selectedUser}
               messages={messages}
-              isConnected={isConnected}
+              isConnected={isSocketConnected}
               onSendMessage={sendMessage}
+              isLoadingMessages={isLoadingMessages}
             />
           ) : (
             <EmptyStatePanel />

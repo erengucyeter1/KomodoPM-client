@@ -1,11 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback, use } from 'react';
-import { io, Socket } from 'socket.io-client';
+import { useState, useEffect, useCallback } from 'react';
 import axiosInstance from '@/utils/axios';
 import { useAuth } from '@/hooks/useAuth';
-import {useNotificationSound} from '@/hooks/useNotification';
-import { getToken } from '@/hooks/useAuth';
+import { useSocket } from '@/context/SocketContext'; // Import the global socket hook
 
 // Tip tanımlamaları
 interface Message {
@@ -26,167 +24,239 @@ interface Message {
   };
 }
 
-export function useChatService() {
-  const [users, setUsers] = useState<any[]>([]);
-  const [selectedUser, setSelectedUser] = useState<any | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [isConnected, setIsConnected] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const socketRef = useRef<Socket | null>(null);
-  const token = getToken();
-  const { user: currentUser } = useAuth();
-  const playNotificationSound = useNotificationSound();
+// Define a type for the user object, especially for lastMessage
+interface ChatUser {
+  id: number;
+  username: string; // Or other user properties
+  // ... other user properties
+  lastMessage?: {
+    content: string;
+    timestamp: Date | string; // Consistent typing
+    isRead: boolean;
+  };
+}
 
-  // Kullanıcıları yükle
+export function useChatService() {
+  const [users, setUsers] = useState<ChatUser[]>([]);
+  const [selectedUser, setSelectedUser] = useState<ChatUser | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(true);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+
+  const { user: currentUser } = useAuth();
+  const { socket, isConnected: isSocketConnected, clearNewMessageIndicator } = useSocket();
+
+  // Fetch users
   useEffect(() => {
     const fetchUsers = async () => {
+      if (!currentUser?.id) return;
+      setIsLoadingUsers(true);
       try {
         const response = await axiosInstance.get('/users/chat');
-        // Kendimizi listeden çıkaralım
-        const filteredUsers = response.data.filter(
+        const filteredUsers: ChatUser[] = response.data.filter(
           (user: any) => user.id !== currentUser?.id
         );
-        setUsers(filteredUsers);
+        // Initialize users with a placeholder for lastMessage if not present
+        const usersWithLastMessage = filteredUsers.map(u => ({
+            ...u,
+            lastMessage: u.lastMessage || { content: '', timestamp: new Date(0), isRead: true }
+        }));
+        setUsers(usersWithLastMessage);
       } catch (error) {
         console.error('Error fetching users:', error);
-        
       } finally {
-        setIsLoading(false);
+        setIsLoadingUsers(false);
       }
     };
-
     fetchUsers();
   }, [currentUser?.id]);
 
-  // WebSocket bağlantısını kur
+  // Handle socket events for chat page
   useEffect(() => {
-    if (!token) return;
+    if (!socket || !isSocketConnected || !currentUser) return;
 
-    const socketInstance = io('http://localhost:3000', {
-      withCredentials: true,
-      transports: ['websocket'],
-      auth: { token }
-    });
-    
-    socketRef.current = socketInstance;
-    
-    socketInstance.on('connect', () => {
-      console.log('Connected to chat server');
-      setIsConnected(true);
-      setIsLoading(false);
-    });
-    
-    socketInstance.on('disconnect', () => {
-      console.log('Disconnected from chat server');
-      setIsConnected(false);
-    });
-    
-    socketInstance.on('directMessage', (newMessage: Message) => {
-      // Sadece aktif sohbetten mesaj geliyorsa göster
-      if (selectedUser && 
-          (newMessage.senderId === selectedUser.id || 
-           newMessage.recipientId === selectedUser.id)) {
+    // Listener for messages within the currently selected direct chat
+    const handleDirectMessage = (newMessage: Message) => {
+      // Only process if it's for the currently selected chat and not from self (already handled optimistically)
+      if (selectedUser &&
+          (newMessage.senderId === selectedUser.id && newMessage.recipientId === currentUser.id) ) {
         setMessages(prev => [...prev, newMessage]);
+        // Mark message as read on server
+        socket.emit('markMessagesAsRead', {
+          senderId: selectedUser.id,
+          recipientId: currentUser.id
+        });
+        // Update user list (last message, isRead status)
+        updateUserWithLastMessage(newMessage, true); // true because chat is open
       }
-      
-      // Mesaj geldiğinde kullanıcıların son mesaj bilgisini güncelle
-      updateUserWithLastMessage(newMessage);
+    };
+
+    // Listener for general new message notifications to update user list UI
+    const handleNewMessageNotificationForUserList = (notification: { message: Message, sender?: ChatUser }) => {
+        const { message } = notification;
+        // Update the user list: new message content, timestamp, reorder
+        // Check if message is from someone not the current user
+        if (message.senderId !== currentUser.id) {
+            setUsers((prevUsers) => {
+                const userExists = prevUsers.find(u => u.id === message.senderId);
+                let updatedUsers = prevUsers.map((user) => {
+                    if (user.id === message.senderId) {
+                        return {
+                            ...user,
+                            lastMessage: {
+                                content: message.content,
+                                timestamp: message.createdAt,
+                                // If this chat is currently selected, it's read. Otherwise, unread.
+                                isRead: selectedUser?.id === message.senderId,
+                            },
+                        };
+                    }
+                    return user;
+                });
+
+                // If new user, add to list (requires sender info, or fetch)
+                // For simplicity, assuming sender is already in users list for now or handled by a separate user update mechanism
+                // if (!userExists && notification.sender) {
+                //   updatedUsers = [{...notification.sender, lastMessage: {content: message.content, timestamp: message.createdAt, isRead: false}}, ...updatedUsers];
+                // }
+
+
+                // Move user with new message to top
+                const senderUser = updatedUsers.find((user) => user.id === message.senderId);
+                if (senderUser) {
+                    const otherUsers = updatedUsers.filter((user) => user.id !== message.senderId);
+                    return [senderUser, ...otherUsers];
+                }
+                return updatedUsers;
+            });
+        } else { // Message sent by current user, update their chat with recipient
+             setUsers((prevUsers) => {
+                return prevUsers.map((user) => {
+                    if (user.id === message.recipientId) { // Find the recipient in the user list
+                        return {
+                            ...user,
+                            lastMessage: {
+                                content: message.content,
+                                timestamp: message.createdAt,
+                                isRead: true, // Read for the sender
+                            },
+                        };
+                    }
+                    return user;
+                });
+            });
+        }
+    };
+
+    socket.on('directMessage', handleDirectMessage); // For messages in the active chat window
+    socket.on('newMessageNotification', handleNewMessageNotificationForUserList); // For updating user list
+
+    return () => {
+      socket.off('directMessage', handleDirectMessage);
+      socket.off('newMessageNotification', handleNewMessageNotificationForUserList);
+    };
+  }, [socket, isSocketConnected, selectedUser, currentUser]);
+
+  // Load messages when a user is selected & join chat room
+  useEffect(() => {
+    if (!selectedUser || !socket || !isSocketConnected || !currentUser) {
+      setMessages([]);
+      return;
+    }
+
+    setIsLoadingMessages(true);
+    console.log(`Joining chat with ${selectedUser.username} (ID: ${selectedUser.id})`);
+    socket.emit('joinDirectChat', { recipientId: selectedUser.id }, (response: any) => {
+      if (response.success && response.messages) {
+        setMessages(response.messages);
+        socket.emit('markMessagesAsRead', { senderId: selectedUser.id, recipientId: currentUser.id });
+        clearNewMessageIndicator(); // Clear global notification dot
+        // Update selected user in the list to mark as read
+        /*
+        setUsers(prevUsers => prevUsers.map(u =>
+            u.id === selectedUser.id ? { ...u, lastMessage: { ...u.lastMessage, isRead: true } } : u
+        ));
+        */
+      } else {
+        console.error("Failed to join direct chat or load messages:", response.error);
+        setMessages([]);
+      }
+      setIsLoadingMessages(false);
     });
 
-    // Yeni mesaj bildirimi dinleme
-    socketInstance.on('newMessageNotification', ({ message }) => {
-      setUsers((prevUsers) => {
-        const updatedUsers = prevUsers.map((user) => {
-          if (user.id === message.senderId) {
-            return {
+    return () => {
+      if (socket && selectedUser) {
+        console.log(`Leaving chat with ${selectedUser.username} (ID: ${selectedUser.id})`);
+        socket.emit('leaveDirectChat', { recipientId: selectedUser.id });
+      }
+      setMessages([]);
+    };
+  }, [selectedUser, socket, isSocketConnected, currentUser, clearNewMessageIndicator]);
+
+  // Update user in list with last message info
+  const updateUserWithLastMessage = useCallback((message: Message, isReadContextually: boolean) => {
+    const targetUserId = message.senderId === currentUser?.id ? message.recipientId : message.senderId;
+    setUsers(prevUsers =>
+      prevUsers.map(user =>
+        user.id === targetUserId
+          ? {
               ...user,
               lastMessage: {
                 content: message.content,
                 timestamp: message.createdAt,
-                isRead: false,
+                isRead: isReadContextually,
               },
-            };
-          }
-          return user;
-        });
-
-        // Yeni mesaj gönderen kullanıcıyı en üste taşı
-        playNotificationSound(); // Bildirim sesi çal
-        const senderUser = updatedUsers.find((user) => user.id === message.senderId);
-        const otherUsers = updatedUsers.filter((user) => user.id !== message.senderId);
-        return senderUser ? [senderUser, ...otherUsers] : updatedUsers;
-
-
-
-      });
-    });
-    
-    return () => {
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-      }
-    };
-  }, [token, selectedUser]);
-
-  // Kullanıcı seçildiğinde mesajları yükle
-  useEffect(() => {
-    if (!selectedUser || !socketRef.current || !isConnected) return;
-    
-    // Özel sohbete katılma isteği gönder
-    socketRef.current.emit('joinDirectChat', { 
-      recipientId: selectedUser.id 
-    }, (response: any) => {
-      if (response.success && response.messages) {
-        setMessages(response.messages);
-      }
-    });
-  }, [selectedUser, isConnected]);
-
-  // Son mesaja göre kullanıcı listesini güncelle
-  const updateUserWithLastMessage = useCallback((message: Message) => {
-    setUsers(prevUsers => {
-      return prevUsers.map(user => {
-        if (user.id === message.senderId || user.id === message.recipientId) {
-          return {
-            ...user,
-            lastMessage: {
-              content: message.content,
-              timestamp: message.createdAt,
-              isRead: message.isRead
             }
-          };
-        }
-        return user;
-      });
-    });
-  }, []);
+          : user
+      )
+    );
+  }, [currentUser?.id]);
 
-  // Mesaj gönderme fonksiyonu
-  const sendMessage = useCallback((content: string, type: string = 'text', metadata: any = null) => {
-    if (!socketRef.current || !isConnected || !selectedUser) {
+  // Send message
+  const sendMessage = useCallback((content: string, type: 'text' | 'permission_request' | 'system' = 'text', metadata: any = null) => {
+    if (!socket || !isSocketConnected || !selectedUser || !currentUser) {
+      console.warn('Cannot send message: Socket not ready, user not selected, or current user not available.');
       return false;
     }
-    
-    socketRef.current.emit('sendDirectMessage', {
-      recipientId: selectedUser.id,
-      content,
-      message_type: type,
-      metadata
-    });
-    
-    return true;
-  }, [isConnected, selectedUser]);
 
-  
+    const messageData: Message = {
+      senderId: Number(currentUser.id),
+      recipientId: Number(selectedUser.id),
+      content,
+      createdAt: new Date(),
+      isRead: false,
+      message_type: type,
+      metadata,
+    };
+
+    socket.emit('sendDirectMessage', messageData);
+
+    // Optimistic UI update
+    setMessages(prev => [...prev, messageData]);
+    updateUserWithLastMessage(messageData, true); // True because current user sent it
+
+     // If the recipient was at the bottom or didn't have a recent message, move them to top
+    setUsers(prevUsers => {
+        const targetUser = prevUsers.find(u => u.id === selectedUser.id);
+        if (targetUser) {
+            const otherUsers = prevUsers.filter(u => u.id !== selectedUser.id);
+            return [targetUser, ...otherUsers];
+        }
+        return prevUsers;
+    });
+
+
+    return true;
+  }, [socket, isSocketConnected, selectedUser, currentUser, updateUserWithLastMessage]);
 
   return {
     users,
     selectedUser,
     setSelectedUser,
     messages,
-    isConnected,
-    isLoading,
+    isSocketConnected,
+    isLoadingUsers,
+    isLoadingMessages,
     sendMessage,
-    
   };
 }

@@ -1,7 +1,8 @@
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
-import DashboardLayout from "@/components/layout/DashboardLayout";
-
+// import DashboardLayout from "@/components/layout/DashboardLayout"; // No longer directly used here
+import ConditionalLayout from "@/components/layout/ConditionalLayout"; // Import the new layout chooser
+import SocketAuthWrapper from "@/context/socketAuthWrapper";
 
 export const metadata = {
   title: "Komodo Project Management",
@@ -16,10 +17,20 @@ export default function RootLayout({
   return (
     <html lang="tr">
       <body>
-        <AuthProvider >
-          <DashboardLayout>{children}</DashboardLayout>
-        </AuthProvider>
+        
+      <AuthProvider >
+              <SocketAuthWrapper>
+                    {/* <DashboardLayout> */}
+                    <ConditionalLayout> 
+                    {children}
+                    {/* </DashboardLayout> */}
+                    </ConditionalLayout>
+              </SocketAuthWrapper>
+      </AuthProvider>
+
       </body>
     </html>
   );
 }
+
+

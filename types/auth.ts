@@ -16,6 +16,7 @@ export interface JwtPayload {
  */
 export interface AuthContextType {
   user: User | null;
+  token: string | null;
   isLoading: boolean; // Renamed from 'loading' for clarity
   isAuthenticated: boolean; // Derived from user presence
   login: (username: string, password: string) => Promise<boolean>;

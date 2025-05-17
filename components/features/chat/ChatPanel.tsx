@@ -1,10 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { BsPlusCircle } from 'react-icons/bs';
 import MessageItem from './MessageItem';
-import MessageTypeSelector from './MessageTypeSelector';
-import PermissionRequestForm from './PermissionRequestForm';
-import PermissionRequestMessage from './PermissionRequestMessage';
 import PermissionButton from "@/components/ui/button/Button";
 
 
@@ -43,37 +39,7 @@ export default function ChatPanel({
     }
   };
 
-  const handleMessageTypeSelect = (type: string) => {
-    setShowTypeSelector(false);
-    if (type === 'permission_request') {
-      setShowPermissionForm(true);
-    }
-  };
 
-  const handlePermissionRequest = (data: any) => {
-    console.log("Sending permission request:", data);
-    
-    onSendMessage(
-      `Değişiklik talebi: ${data.projectNumber} projesi, ${data.expenseNumber} numaralı gider için ${data.oldAmount}₺ → ${data.newAmount}₺`, 
-      'permission_request', 
-      {
-        projectNumber: data.projectNumber,
-        expenseNumber: data.expenseNumber,
-        oldAmount: parseFloat(data.oldAmount),
-        newAmount: parseFloat(data.newAmount),
-        status: 'pending'
-      }
-    );
-    setShowPermissionForm(false);
-  };
-
-  const handleApprove = (messageId: string) => {
-    // Onaylama işlemi
-  };
-
-  const handleReject = (messageId: string) => {
-    // Reddetme işlemi
-  };
 
   return (
     <div className="flex flex-col h-full">
@@ -103,7 +69,7 @@ export default function ChatPanel({
             <MessageItem
               key={message.id || index}
               message={message}
-              currentUserId={currentUser?.id}
+              currentUserId={Number(currentUser?.id)}
             />
           ))
         )}
@@ -112,30 +78,6 @@ export default function ChatPanel({
       
       {/* Mesaj Gönderme Formu */}
       <div className="p-4 border-t border-gray-200 flex items-center relative">
-        <button
-          onClick={() => setShowTypeSelector(!showTypeSelector)}
-          className="text-gray-500 hover:text-blue-500 mr-2 relative"
-          title="Özel mesaj türleri"
-        >
-          <BsPlusCircle size={20} />
-        </button>
-        
-        {showTypeSelector && (
-          <MessageTypeSelector 
-            onSelect={handleMessageTypeSelect}
-            onClose={() => setShowTypeSelector(false)}
-          />
-        )}
-        
-        {showPermissionForm && (
-          <div className="absolute bottom-full left-0 mb-2 w-80 z-20 bg-white rounded-lg shadow-lg border border-gray-200">
-            <PermissionRequestForm 
-              onSubmit={handlePermissionRequest}
-              onCancel={() => setShowPermissionForm(false)}
-            />
-          </div>
-        )}
-        
         <input
           type="text"
           value={newMessage}

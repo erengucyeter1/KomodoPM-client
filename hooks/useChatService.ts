@@ -177,20 +177,7 @@ export function useChatService() {
     return true;
   }, [isConnected, selectedUser]);
 
-  // İzin isteğine yanıt verme fonksiyonu
-  const respondToPermissionRequest = useCallback((messageId: string, approved: boolean) => {
-    if (!socketRef.current || !isConnected) {
-      return false;
-    }
-    
-    console.log("Responding to permission request:", messageId, approved);
-    socketRef.current.emit('respondToPermissionRequest', {
-      messageId,
-      approved
-    });
-    
-    return true;
-  }, [isConnected]);
+  
 
   return {
     users,
@@ -200,6 +187,6 @@ export function useChatService() {
     isConnected,
     isLoading,
     sendMessage,
-    respondToPermissionRequest
+    
   };
 }

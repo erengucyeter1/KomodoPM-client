@@ -10,6 +10,8 @@ interface PermissionRequestMessageProps {
     oldAmount: number;
     newAmount: number;
     status: 'pending' | 'approved' | 'rejected';
+    measurementUnit?: string;
+    productDescription?: string;
   };
   isOwnMessage: boolean;
 
@@ -93,7 +95,7 @@ export default function PermissionRequestMessage({
 
   
 
-  const { attemptId, projectNumber, expenseNumber, oldAmount, newAmount, status } = data;
+  const { attemptId, projectNumber, expenseNumber, oldAmount, newAmount, status, measurementUnit, productDescription } = data;
 
   const [messageStatus, setMessageStatus] = useState(data.status)
 
@@ -102,24 +104,38 @@ export default function PermissionRequestMessage({
     <div className={`max-w-[80%] my-1 ${isOwnMessage ? 'self-end ml-auto' : 'self-start'}`}>
       <div className="border-2 border-gray-200 rounded-md p-3 bg-white text-gray-800">
         <div className="font-bold mb-2">Değişiklik Talebi</div>
-        <div className="grid grid-cols-2 gap-2 mb-3">
-          <div>
-            <div className="text-xs text-gray-500">Proje No</div>
-            <div>{projectNumber}</div>
+
+        <div className="mb-3 flex flex-col gap-2">
+          <div className="grid grid-cols-2 gap-2 mb-3">
+            <div>
+              <div className="text-xs text-gray-500">Proje No</div>
+              <div>{projectNumber}</div>
+            </div>
+            <div>
+              <div className="text-xs text-gray-500">Gider No</div>
+              <div>{expenseNumber}</div>
+            </div>
           </div>
-          <div>
-            <div className="text-xs text-gray-500">Gider No</div>
-            <div>{expenseNumber}</div>
+          <div className="flex flex-col gap-2 w-full max-w-xs break-words">
+            <div className="text-xs text-gray-500">Ürün</div>
+            <div className="text-sm text-gray-800 break-words">{productDescription}</div>
           </div>
-          <div>
-            <div className="text-xs text-gray-500">Eski Miktar</div>
-            <div className="line-through">{oldAmount} ₺</div>
+
+
+
+          <div className="grid grid-cols-2 gap-2 mb-3">
+            <div>
+              <div className="text-xs text-gray-500">Eski Miktar</div>
+              <div className="line-through">{oldAmount} {measurementUnit}</div>
+            </div>
+            <div>
+              <div className="text-xs text-gray-500">Yeni Miktar</div>
+              <div className="font-semibold">{newAmount} {measurementUnit}</div>
+            </div>
           </div>
-          <div>
-            <div className="text-xs text-gray-500">Yeni Miktar</div>
-            <div className="font-semibold">{newAmount} ₺</div>
-          </div>
+
         </div>
+
         
         <div className="flex justify-between items-center">
           <div className={`px-2 py-1 rounded text-sm ${

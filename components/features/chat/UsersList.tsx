@@ -75,7 +75,7 @@ export default function UsersList({
                       </p>
                     ) : (
                       <p className="text-sm text-gray-500 italic">
-                        Henüz mesaj yok
+                        Yeni mesaj yok
                       </p>
                     )}
                   </div>

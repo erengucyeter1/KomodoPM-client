@@ -355,12 +355,6 @@ function ProjectDetailPage() {
       return;
     }
     
-    const updatedExpenseList = projectExpenses.map(exp =>
-      exp.id === selectedExpenseForEdit.id ? { ...exp, quantity: newQuantityNum.toString() } : exp
-    );
-    setProjectExpenses(updatedExpenseList);
-    
-    setSelectedExpenseForEdit(prev => prev ? { ...prev, quantity: newQuantityNum.toString() } : null);
 
     if(isPermissionRequired) {
 
@@ -383,6 +377,8 @@ function ProjectDetailPage() {
             attemptId: response.data.data.id,
             projectNumber: selectedExpenseForEdit.project_id,
             expenseNumber: selectedExpenseForEdit.id,
+            measurementUnit: selectedExpenseForEdit.product?.measurement_unit,
+            productDescription: selectedExpenseForEdit.product?.description,
             oldAmount: parseFloat(selectedExpenseForEdit.quantity),
             newAmount: parseFloat(newQuantityNum.toString()),
             status: 'pending'
@@ -405,7 +401,13 @@ function ProjectDetailPage() {
 
       if(response.status === 200 && response.data.success){
         console.log("Quantity updated response:", response);
-        setProjectExpenses(prev => prev.map(exp => exp.id === selectedExpenseForEdit.id ? { ...exp, quantity: newQuantityNum.toString() } : exp));
+        //setProjectExpenses(prev => prev.map(exp => exp.id === selectedExpenseForEdit.id ? { ...exp, quantity: newQuantityNum.toString() } : exp));
+        const updatedExpenseList = projectExpenses.map(exp =>
+          exp.id === selectedExpenseForEdit.id ? { ...exp, quantity: newQuantityNum.toString() } : exp
+        );
+        setProjectExpenses(updatedExpenseList);
+        
+        setSelectedExpenseForEdit(prev => prev ? { ...prev, quantity: newQuantityNum.toString() } : null);
       }else{
         setError("Miktar güncellenirken bir hata oluştu.");
       }

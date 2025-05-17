@@ -12,6 +12,8 @@ interface SendMessageOptions {
     attemptId?: number;
     projectNumber?: string;
     expenseNumber?: string;
+    measurementUnit?: string;
+    productDescription?: string;
     oldAmount?: number;
     newAmount?: number;
     status?: 'pending' | 'approved' | 'rejected';

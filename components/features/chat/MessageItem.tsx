@@ -7,10 +7,16 @@ interface MessageItemProps {
 }
 
 export default function MessageItem({ message, currentUserId }: MessageItemProps) {
-  const isOwnMessage = message.senderId === currentUserId;
-  console.log("message.senderId:", message.senderId);
-  console.log("currentUserId:", currentUserId);
-  console.log("isOwnMessage:", isOwnMessage);
+  // Ensure both are numbers for comparison
+  const isOwnMessage = Number(message.senderId) === Number(currentUserId); // Convert message.senderId to Number
+
+  // Add detailed logging to be sure
+  console.log(
+    `MessageItem: ID ${message.id}, Raw senderId: ${message.senderId} (type: ${typeof message.senderId}), ` +
+    `Raw currentUserId: ${currentUserId} (type: ${typeof currentUserId}), ` +
+    `Number(message.senderId): ${Number(message.senderId)}, Number(currentUserId): ${Number(currentUserId)}, ` +
+    `isOwnMessage: ${isOwnMessage}`
+  );
   
   // For debugging
   console.log("Message:", message);

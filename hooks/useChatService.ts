@@ -59,7 +59,7 @@ export function useChatService() {
         // Initialize users with a placeholder for lastMessage if not present
         const usersWithLastMessage = filteredUsers.map(u => ({
             ...u,
-            lastMessage: u.lastMessage || { content: '', timestamp: new Date(0), isRead: true }
+            lastMessage: u.lastMessage || { content: '', timestamp: new Date(), isRead: true }
         }));
         setUsers(usersWithLastMessage);
       } catch (error) {

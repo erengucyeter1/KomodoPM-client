@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import PermissionLink from "@/components/ui/link/PermissionLink";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
-import { useSocket } from "@/context/SocketContext";
+import { useSocket } from "@/context/SocketContext"; // Corrected import path
 
 interface MenuItem {
   title: string;
@@ -12,38 +12,19 @@ interface MenuItem {
   icon: React.ReactNode;
   requiredPermission?: number;
   permissions: string[];
-  condition?: boolean;
+  condition?: () => boolean; // Make condition a function to be evaluated on render
   extra_component?: React.ReactNode;
+  onClick?: () => void;
 }
 
-
-
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-
   const pathname = usePathname();
-
   const { user, logout } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
-  const {hasNewMessages, clearNewMessageIndicator } = useSocket(); 
+  const { hasNewMessages, clearNewMessageIndicator } = useSocket();
 
-  const handleChatLinkClick = () => {
-    // The indicator will be cleared when the chat page loads messages
-    // and calls clearNewMessageIndicator via useChatService.
-    // Or, you can clear it optimistically here if preferred:
-    if (hasNewMessages) {
-       clearNewMessageIndicator();
-     }
-  };
-
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  const showNavbar = true;
-  const showSidebar = true;
-
+  // Define menuItems INSIDE the component so it has access to the latest hasNewMessages
   const menuItems: MenuItem[] = [
     {
       title: "Dashboard",
@@ -80,23 +61,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       path: "/trailers",
       icon: (
         <svg className="h-5 w-5" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    {/* Ayak */}
-    <line x1="2" y1="18" x2="2" y2="28" />
-    <line x1="0.5" y1="28" x2="3.5" y2="28" />
-
-    {/* Ön bağlantı */}
-    <line x1="0" y1="18" x2="8" y2="18" />
-
-    {/* Gövde */}
-    <polyline points="8,18 10,22 26,22" />
-
-    {/* Tekerlekler */}
-    <circle cx="20" cy="28" r="2.5" fill="currentColor" stroke="none" />
-    <circle cx="26" cy="28" r="2.5" fill="currentColor" stroke="none" />
-
-    {/* Arka çıkıntı */}
-    <line x1="28" y1="22" x2="31" y2="22" />
-  </svg>
+          <line x1="2" y1="18" x2="2" y2="28" />
+          <line x1="0.5" y1="28" x2="3.5" y2="28" />
+          <line x1="0" y1="18" x2="8" y2="18" />
+          <polyline points="8,18 10,22 26,22" />
+          <circle cx="20" cy="28" r="2.5" fill="currentColor" stroke="none" />
+          <circle cx="26" cy="28" r="2.5" fill="currentColor" stroke="none" />
+          <line x1="28" y1="22" x2="31" y2="22" />
+        </svg>
       ),
       permissions: ['see:trailers']
     },
@@ -107,7 +79,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
-            ),
+      ),
       permissions: ['see:invoices']
     },
     {
@@ -115,14 +87,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       path: "/partners",
       icon: (
         <svg className="h-5 w-5" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    {/* Müşteri figürü (ön planda küçük) */}
-    <circle cx="10" cy="10" r="3" />
-    <path d="M6 20c0-2 2-4 4-4s4 2 4 4" />
-
-    {/* Satıcı figürü (arka planda büyük) */}
-    <circle cx="22" cy="8" r="4" />
-    <path d="M16 20c0-3 3-5 6-5s6 2 6 5" />
-  </svg>
+          <circle cx="10" cy="10" r="3" />
+          <path d="M6 20c0-2 2-4 4-4s4 2 4 4" />
+          <circle cx="22" cy="8" r="4" />
+          <path d="M16 20c0-3 3-5 6-5s6 2 6 5" />
+        </svg>
       ),
       permissions: ['see:partners']
     },
@@ -134,9 +103,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
         </svg>
       ),
-      condition: hasNewMessages,
-      extra_component:   <span className="absolute top-0 right-0 block h-2 w-2 rounded-full ring-2 ring-white bg-green-500"></span>      ,
-      permissions: ['see:chat']
+      condition: () => hasNewMessages, // Use a function that returns the current hasNewMessages
+      extra_component: <span className="absolute top-0 right-0 block h-2 w-2 rounded-full ring-2 ring-white bg-green-500"></span>,
+      permissions: ['see:chat'],
+      onClick: () => { // Added onClick handler for chat link
+        console.log("yeni msj: ", hasNewMessages);
+        if (hasNewMessages) {
+          clearNewMessageIndicator();
+          
+        }
+      }
     },
     {
       title: "Stok",
@@ -150,11 +126,31 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     },
   ];
 
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // This useEffect is for debugging, you can remove it later
+  useEffect(() => {
+    console.log("DashboardLayout: hasNewMessages changed to", hasNewMessages);
+  }, [hasNewMessages]);
+
+
+  // The handleChatLinkClick is not needed if onClick is directly on the menu item
+  // const handleChatLinkClick = () => {
+  //   if (hasNewMessages) {
+  //      clearNewMessageIndicator();
+  //    }
+  // };
+
+  const showNavbar = true;
+  const showSidebar = true;
+
   return (
     <div className="min-h-screen bg-gray-100">
-      {/* Üst Navbar - Sabitlendi */}
       {showNavbar && (
         <nav className="bg-[#063554] shadow-md fixed w-full top-0 z-20">
+          {/* ... (navbar content same as before) ... */}
           <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between h-16">
               <div className="flex">
@@ -199,9 +195,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </nav>
       )}
 
-      {/* Sidebar ve Ana İçerik Kapsayıcısı - Navbar için üstten padding eklendi */}
       <div className="flex pt-16">
-        {/* Sidebar - Sabitlendi ve navbar'ın altına konumlandırıldı */}
         {showSidebar && (
           <aside
             className={`${
@@ -211,14 +205,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div className="py-4">
               <ul className="space-y-1">
                 {menuItems.map((item) => {
-                 
-
                   if (!isMounted) {
-                    return null; // Sunucuda veya ilk client render'da (hydration öncesi)
+                    return null;
                   }
-
                   const isActive = pathname === item.path || pathname.startsWith(`${item.path}/`);
-                  
+                  const showCondition = item.condition ? item.condition() : false; // Evaluate condition function
+
                   return (
                     <li key={item.path}>
                       <PermissionLink
@@ -229,11 +221,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             ? "bg-[#063554] text-white"
                             : "text-white hover:bg-[#336383]"
                         } transition-colors rounded-md mx-2`}
+                        onClick={item.onClick}
                       >
-                        <div className="mr-3">
+                        <div className="mr-3 relative">
                           {item.icon}
-                          {item.condition && item.extra_component}
-
+                          {/* Use the evaluated showCondition here */}
+                          {showCondition && item.extra_component}
                         </div>
                         <span className={isSidebarOpen ? "block" : "hidden"}>
                           {item.title}
@@ -247,7 +240,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </aside>
         )}
 
-        {/* Main content - Sol margin ayarları sidebar genişliğine göre devam ediyor */}
         <main
           className={`flex-1 ${
             showSidebar && isSidebarOpen ? "ml-64" : showSidebar ? "ml-20" : "ml-0"

@@ -2,7 +2,7 @@
 
 import React, { createContext, useState, useEffect, ReactNode, useCallback, useContext, useMemo } from 'react';
 import { useRouter } from 'next/navigation'; // Or 'next/router' for older Next.js versions
-import { User } from '@/types/UserInterface';
+import { User } from '@/types/UserInfoInterfaces';
 import { AuthContextType } from '@/types/auth';
 import { authService } from '@/services/authService';
 

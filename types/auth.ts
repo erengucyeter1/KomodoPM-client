@@ -1,4 +1,4 @@
-import { User } from './UserInterface';
+import { User } from './UserInfoInterfaces';
 
 /**
  * Describes the expected payload structure of the JWT.

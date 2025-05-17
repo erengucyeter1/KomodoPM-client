@@ -1,5 +1,5 @@
 // client/types/index.ts (veya uygun bir yol)
-export interface User {
+ export interface User {
     id: string |number; // Kullanıcı ID'si
     username: string;    // Kullanıcı adı
     name?: string;        // Gerçek adı (opsiyonel olabilir)
@@ -10,3 +10,21 @@ export interface User {
     authorization_ids?: (string | number)[]; // Yetki ID'leri (eski sistemle uyumluluk için)
     authorization_rank: number;
   }
+
+
+  export interface Role {
+    id: string;
+    name: string;
+    description: string;
+    permissions: Permission[];
+  }
+
+
+  export interface Permission {
+    id: number;
+    name: string;
+    description: string;
+    selectedPermissions: number[];
+  }
+
+  

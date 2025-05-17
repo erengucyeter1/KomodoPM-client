@@ -1,9 +1,5 @@
 "use client";
 
-
-"use client";
-
-
 import { useState, useEffect, useRef } from "react";
 import axiosInstance from "@/utils/axios";
 import { useAuth } from "@/hooks/useAuth";
@@ -14,21 +10,11 @@ import Loading from "@/components/ui/feedback/Loading";
 import TextInput from "@/components/ui/form/TextInput";
 import {usePermissions} from "@/hooks/usePermissions";
 import { withPermissions } from "@/hoc/withPermissions";
+import { Role , Permission} from "@/types/UserInfoInterfaces"; 
 
-// Tip tanımlamaları
-interface Role {
-  id: string;
-  name: string;
-  description: string;
-  permissions: Permission[];
-}
 
-interface Permission {
-  id: number;
-  name: string;
-  description: string;
-  selectedPermissions: number[];
-}
+
+
 
 interface EditedRole extends Role {
   selectedPermissions: number[];

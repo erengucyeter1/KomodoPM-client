@@ -7,7 +7,7 @@ import PermissionsCard from "@/components/ui/card/Card";
 import Loading from "@/components/ui/feedback/Loading";
 import PermissionButton from "@/components/ui/button/Button";
 import Link from "next/link";
-import { User } from "@/types/UserInterface";
+import { User } from "@/types/UserInfoInterfaces";
 
 interface DashboardStats {
   totalUsers: number;

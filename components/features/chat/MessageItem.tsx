@@ -8,6 +8,9 @@ interface MessageItemProps {
 
 export default function MessageItem({ message, currentUserId }: MessageItemProps) {
   const isOwnMessage = message.senderId === currentUserId;
+  console.log("message.senderId:", message.senderId);
+  console.log("currentUserId:", currentUserId);
+  console.log("isOwnMessage:", isOwnMessage);
   
   // For debugging
   console.log("Message:", message);

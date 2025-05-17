@@ -1,4 +1,3 @@
-// client/context/SocketContext.tsx
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
@@ -6,18 +5,22 @@ import { io, Socket } from 'socket.io-client';
 import { useAuth } from '@/hooks/useAuth';
 import { useNotificationSound } from '@/hooks/useNotification';
 import { getToken } from '@/hooks/useAuth';
+import { User } from '@/types/UserInfoInterfaces';
+
+
 
 // Define the shape of the message for notifications
-// This should match the Message interface in useChatService or be a subset
 interface NotificationMessage {
-  id?: string;
-  senderId: number;
-  recipientId: number;
+  id: number;
+  senderId: string; // Was number, now string based on example "6"
+  recipientId: string; // Was number, now string based on example "5"
   content: string;
-  createdAt: Date; // Ensure this is consistently Date or string
+  createdAt: string; // Was Date, now string e.g., "2025-05-17T13:13:37.981Z"
+  updatedAt: string; // New field
   isRead: boolean;
   message_type: 'text' | 'permission_request' | 'system';
   metadata?: any;
+  sender: User; // New nested sender object
 }
 
 interface SocketContextType {
@@ -99,18 +102,76 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
 
     // Listen for global new message notifications
     // This event should be emitted by your server to the recipient
-    newSocket.on('newMessageNotification', (message: NotificationMessage) => {
-      console.log('Global newMessageNotification received:', message);
-      // Ensure the notification is for the current user and not from themselves
-      if (message.recipientId === currentUser.id && message.senderId !== currentUser.id) {
-        // Check if chat page is active with this sender, if so, it might be handled there
-        // For simplicity, we always set hasNewMessages true and play sound
-        // The chat page itself can clear this flag when it opens the specific chat.
-        if(hasNewMessages === false){
+    newSocket.on('newMessageNotification', (eventData: any) => { // Using 'any' for robust initial debugging
+      console.log('--- newMessageNotification START ---');
+      console.log('Raw eventData received by socket event:', eventData);
+
+      if (!eventData || typeof eventData.message === 'undefined') {
+        console.error('CRITICAL ERROR: eventData itself or eventData.message is missing or not the expected structure. eventData:', eventData);
+        console.log('--- newMessageNotification END (halted due to missing data structure) ---');
+        return;
+      }
+      
+      console.log('Confirmed: eventData contains a "message" property.');
+      const actualMessage = eventData.message;
+      console.log('Extracted actualMessage object:', actualMessage);
+
+      if (actualMessage && typeof actualMessage === 'object' && actualMessage !== null) {
+        console.log('Keys present in actualMessage:', Object.keys(actualMessage));
+      } else {
+        console.warn('WARNING: actualMessage is not a valid object or is null. actualMessage:', actualMessage);
+        // If actualMessage is not an object, we cannot proceed to read its properties.
+        console.log('--- newMessageNotification END (halted due to invalid actualMessage) ---');
+        return;
+      }
+
+      // Check currentUser status
+      if (!currentUser) {
+        console.error('CRITICAL ERROR: currentUser object is not available at the time of notification.');
+        console.log('--- newMessageNotification END (halted due to missing currentUser) ---');
+        return;
+      }
+      console.log('currentUser object appears to be available:', currentUser);
+
+      if (typeof currentUser.id === 'undefined') {
+        console.error('CRITICAL ERROR: currentUser.id is undefined.');
+        console.log('--- newMessageNotification END (halted due to missing currentUser.id) ---');
+        return;
+      }
+      console.log('currentUser.id is available:', currentUser.id, '(type:', typeof currentUser.id, ')');
+
+      // Now, attempt to access properties on actualMessage
+      const recipientIdFromMessage = actualMessage.recipientId;
+      const senderIdFromMessage = actualMessage.senderId;
+
+      console.log('Value of actualMessage.recipientId:', recipientIdFromMessage, '(type:', typeof recipientIdFromMessage, ')');
+      console.log('Value of actualMessage.senderId:', senderIdFromMessage, '(type:', typeof senderIdFromMessage, ')');
+      
+      // If recipientId or senderId are still undefined here, it means they truly don't exist
+      // on actualMessage with those exact names (check the 'Keys present in actualMessage' log above).
+
+      const currentUserIdStr = String(currentUser.id);
+
+      if (String(recipientIdFromMessage) === currentUserIdStr && String(senderIdFromMessage) !== currentUserIdStr) {
+        console.log('Condition MET: Notification is for current user and not from self.');
+        console.log('Value of hasNewMessages before attempting to play sound:', hasNewMessages);
+        if (hasNewMessages === false) { // Check current state before playing sound
+          console.log('Attempting to play notification sound because hasNewMessages is false.');
           playNotificationSound();
+          console.log("Notification sound played! (or at least the function was called)");
+        } else {
+          console.log('Notification sound NOT played because hasNewMessages was already true.');
         }
         setHasNewMessages(true);
+      } else {
+        console.log('Condition NOT MET for showing notification. Debug details:');
+        console.log(`  - Parsed recipientIdFromMessage: ${recipientIdFromMessage} (type: ${typeof recipientIdFromMessage})`);
+        console.log(`  - Parsed senderIdFromMessage: ${senderIdFromMessage} (type: ${typeof senderIdFromMessage})`);
+        console.log(`  - Current user ID (for comparison): ${currentUserIdStr}`);
+        console.log(`  - Check 1 (recipientId === currentUserIdStr): ${String(recipientIdFromMessage) === currentUserIdStr}`);
+        console.log(`  - Check 2 (senderId !== currentUserIdStr): ${String(senderIdFromMessage) !== currentUserIdStr}`);
       }
+      console.log('--- newMessageNotification END (normal completion) ---');
     });
 
     // Set the socket instance immediately to allow other hooks/components to use it

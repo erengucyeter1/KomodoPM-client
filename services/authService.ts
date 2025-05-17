@@ -1,5 +1,5 @@
 import axiosInstance from '@/utils/axios';
-import { User } from '@/types/UserInterface';
+import { User } from '@/types/UserInfoInterfaces';
 import { JwtPayload } from '@/types/auth';
 
 const TOKEN_KEY = 'token';

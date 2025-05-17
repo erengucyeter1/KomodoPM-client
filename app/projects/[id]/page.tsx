@@ -14,7 +14,7 @@ import { Download, Edit } from "lucide-react"; // Yeni ikon için import
 import InfoIcon from "@/components/ui/info/infoIcon";
 import {useAuth} from "@/hooks/useAuth"
 import { withPermissions } from "@/hoc/withPermissions";
-import { User } from "@/types/UserInterface";
+import { User } from "@/types/UserInfoInterfaces";
 import {
   Dialog,
   DialogContent,

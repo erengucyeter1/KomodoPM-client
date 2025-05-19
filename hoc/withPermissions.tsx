@@ -14,7 +14,6 @@ export function withPermissions<P extends {}>(
     return <WrappedComponent {...props} />;
   };
 
-  // Display name eklemek debugging için faydalı
   ComponentWithPermissions.displayName = `withPermissions(${
     WrappedComponent.displayName || WrappedComponent.name || "Component"
   })`;

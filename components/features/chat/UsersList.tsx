@@ -57,7 +57,7 @@ export default function UsersList({
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-baseline">
                       <h3 className="font-medium text-gray-900 truncate">{`${user.name} ${user.surname}`}</h3>
-                      {user.lastMessage && (
+                      {user.lastMessage && user.lastMessage.content && user.lastMessage.timestamp && (
                         <span className="text-xs text-gray-500">
                           {formatDistanceToNow(new Date(user.lastMessage.timestamp), {
                             addSuffix: true,
@@ -67,7 +67,7 @@ export default function UsersList({
                       )}
                     </div>
                     
-                    {user.lastMessage ? (
+                    {user.lastMessage && user.lastMessage.content && user.lastMessage.timestamp ? (
                       <p className={`text-sm truncate ${
                         !user.lastMessage.isRead ? 'font-semibold text-[#063554]' : 'text-gray-500'
                       }`}>
@@ -81,7 +81,7 @@ export default function UsersList({
                   </div>
                   
                   {/* Okunmamış mesaj belirteci */}
-                  {user.lastMessage && !user.lastMessage.isRead && (
+                  {user.lastMessage && user.lastMessage.content && user.lastMessage.timestamp && !user.lastMessage.isRead && (
                     <div className="w-3 h-3 rounded-full bg-[#da8e0a] self-center ml-2"></div>
                   )}
                 </button>

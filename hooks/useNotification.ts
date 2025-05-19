@@ -18,6 +18,30 @@ export function useNotificationSound() {
     };
   }, []);
 
+  useEffect(() => {
+    const unlockAudio = () => {
+      if (audioRef.current) {
+        // Oynat ve hemen duraklat
+        audioRef.current.play().then(() => {
+          audioRef.current?.pause();
+          if (audioRef.current) {
+            audioRef.current.currentTime = 0;
+          }
+          console.log('Audio unlocked after user interaction.');
+        }).catch(err => {
+          console.warn("Audio unlock failed:", err);
+        });
+      }
+  
+      // Bir kez çalıştıktan sonra olay dinleyicisini kaldır
+      window.removeEventListener('click', unlockAudio);
+    };
+  
+    // İlk etkileşim için dinleyici
+    window.addEventListener('click', unlockAudio);
+  }, []);
+  
+
   const playNotificationSound = () => {
     console.log('Playing notification sound...');
     

@@ -828,11 +828,14 @@ function ProjectDetailPage() {
               />
             </div>
           </div>}
-          <DialogFooter className="sm:justify-between">
-            {!error &&<Button variant="destructive" onClick={openDeleteConfirmation}>
+          <DialogFooter className="sm:justify-end">
+            {!error &&<PermissionButton permissionsRequired={["delete:projectExpense"]} variant="danger" onClick={openDeleteConfirmation}>
               Gideri Sil
-            </Button>}
-            <div className="flex gap-2">
+            </PermissionButton>}
+            
+            <div className="flex gap-2 justify-around">
+
+           
               <DialogClose asChild>
                 <Button type="button" variant="outline" onClick={closeEditModal}>
                   İptal

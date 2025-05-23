@@ -276,7 +276,7 @@ function RolesPage() {
         <PermissionButton 
           onClick={handleAddRole}
           startIcon="+"
-          permissionsRequired= {['add:role']}
+          permissionsRequired= {['create:role']}
         >
           Yeni Rol Ekle
         </PermissionButton>
